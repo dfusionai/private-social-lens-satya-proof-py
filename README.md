@@ -52,7 +52,7 @@ To use this template:
 
 The main proof logic is implemented in `psl_proof/proof.py`. To customize it, update the `Proof.generate()` function to change how input files are processed.
 
-The proof can be configured using environment variables
+The proof can be configured using environment variables.
 
 If you want to use a language other than Python, you can modify the Dockerfile to install the necessary dependencies and build the proof task in the desired language.
 
@@ -95,13 +95,9 @@ This template leverages several security features:
 2. **Input/Output Isolation**: Input and output directories are mounted separately, ensuring clear data flow boundaries
 3. **Minimal Container**: Uses a minimal Python base image to reduce attack surface
 
-## Customization
-
-Feel free to modify any part of this template to fit your specific needs. The goal is to provide a starting point that can be easily adapted to various proof tasks.
-
 ## Contributing
 
-If you have suggestions for improving this template, please open an issue or submit a pull request.
+If you have suggestions for improving this proof, please submit a pull request.
 
 ## License
 
