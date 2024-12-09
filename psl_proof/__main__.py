@@ -6,7 +6,7 @@ import traceback
 import zipfile
 from typing import Dict, Any
 
-from my_proof.proof import Proof
+from psl_proof.proof import Proof
 
 INPUT_DIR, OUTPUT_DIR = '/input', '/output'
 
@@ -18,7 +18,7 @@ def load_config() -> Dict[str, Any]:
     config = {
         'dlp_id': 1234,  # Set your own DLP ID here
         'input_dir': INPUT_DIR,
-        'user_email': os.environ.get('USER_EMAIL', None),
+        'salt': 'replace-this-salt' # TODO: replace this so that we can salt in a better way
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
     return config

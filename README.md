@@ -1,4 +1,4 @@
-# Vana Satya Proof of Contribution - Python Template
+# Vana Satya Proof of Contribution - dFusion Private Social Lens
 
 This repository serves as a template for creating a [proof of contribution](https://docs.vana.org/vana/core-concepts/key-elements/proof-of-contribution) tasks using Python. It is executed on Vana's Satya Network, a group of highly confidential and secure compute nodes that can validate data without revealing its contents to the node operator.
 
@@ -31,7 +31,7 @@ The project is designed to work with Intel TDX (Trust Domain Extensions), provid
 
 ## Project Structure
 
-- `my_proof/`: Contains the main proof logic
+- `psl_proof/`: Contains the main proof logic
     - `proof.py`: Implements the proof generation logic
     - `__main__.py`: Entry point for the proof execution
     - `models/`: Data models for the proof system
@@ -44,17 +44,15 @@ The project is designed to work with Intel TDX (Trust Domain Extensions), provid
 To use this template:
 
 1. Fork this repository
-2. Modify the `my_proof/proof.py` file to implement your specific proof logic
+2. Modify the `psl_proof/proof.py` file to implement your specific proof logic
 3. Update the project dependencies in `requirements.txt` if needed
 4. Commit your changes and push to your repository
 
 ## Customizing the Proof Logic
 
-The main proof logic is implemented in `my_proof/proof.py`. To customize it, update the `Proof.generate()` function to change how input files are processed.
+The main proof logic is implemented in `psl_proof/proof.py`. To customize it, update the `Proof.generate()` function to change how input files are processed.
 
-The proof can be configured using environment variables:
-
-- `USER_EMAIL`: The email address of the data contributor, to verify data ownership
+The proof can be configured using environment variables
 
 If you want to use a language other than Python, you can modify the Dockerfile to install the necessary dependencies and build the proof task in the desired language.
 
@@ -63,13 +61,13 @@ If you want to use a language other than Python, you can modify the Dockerfile t
 To run the proof locally for testing, you can use Docker:
 
 ```bash
-docker build -t my-proof .
+docker build -t psl-proof .
 docker run \
   --rm \
   --volume $(pwd)/input:/input \
   --volume $(pwd)/output:/output \
   --env USER_EMAIL=user123@gmail.com \
-  my-proof
+  psl-proof
 ```
 
 ## Running with Intel TDX
@@ -84,7 +82,7 @@ docker run \
   --volume /path/to/input:/input \
   --volume /path/to/output:/output \
   --env USER_EMAIL=user123@gmail.com \
-  my-proof
+  psl-proof
 ```
 
 Remember to populate the `/input` directory with the files you want to process.
