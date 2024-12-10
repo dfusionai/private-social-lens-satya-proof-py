@@ -59,11 +59,6 @@ class Proof:
             source_id = source_user_hash_64
         )
 
-        #Submit Source data to server
-        submit_proof_data(
-            source_data
-        )
-
         metadata = MetaData(
           source_id = source_user_hash_64,
           dlp_id = self.config['dlp_id']
@@ -135,7 +130,7 @@ def get_telegram_data(
     if chat_type == "message":
         # Extract user ID
         chat_user_id = input_content.get("sender_id", {}).get("user_id", "")
-        print(f"chat_user_id: {chat_user_id}")
+        #print(f"chat_user_id: {chat_user_id}")
         source_chat_data.add_participant(chat_user_id)
 
         message_date = submission_timestamp
@@ -143,6 +138,7 @@ def get_telegram_data(
         date_value = input_content.get("date", None)
         if date_value:
             message_date = datetime.utcfromtimestamp(date_value)  # Convert Unix timestamp to datetime
+        #print(f"message_date: {message_date}")
 
         # Extract the message content
         message = input_content.get('content', {})
@@ -162,8 +158,8 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
     if (revision and revision != "01.01"):
        print(f"Invalid Revision: {revision}")
 
-    submission_date = datetime.now().timestamp()
-    print(f"submission_date: {submission_date}")
+    submission_date = datetime.now()
+    #print(f"submission_date: {submission_date}")
 
     input_source_value = input_data.get('source', '').upper()
     input_source = None

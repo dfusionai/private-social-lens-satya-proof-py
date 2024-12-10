@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Enum for DataSource
 class DataSource(Enum):
-    telegram = 1
+    telegram = 0
 
 # Source Chat Data
 @dataclass
@@ -83,13 +83,13 @@ class SourceChatData:
             time_in_minutes = int(time_in_seconds // 60)
 
             if (self.chat_start_on):
-               if (self.chat_start_on < chat_timestamp):
+               if (self.chat_start_on > chat_timestamp):
                   self.chat_start_on = chat_timestamp
             else :
                self.chat_start_on = chat_timestamp
 
             if (self.chat_ended_on):
-               if (self.chat_ended_on > chat_timestamp):
+               if (self.chat_ended_on < chat_timestamp):
                   self.chat_ended_on = chat_timestamp
             else :
                self.chat_ended_on = chat_timestamp
@@ -113,13 +113,15 @@ class SourceChatData:
         }
 
     def to_submission_json(self) -> dict:
+        chat_start_on = self.chat_start_on if self.chat_start_on is not None else datetime.now()
+        chat_ended_on = self.chat_ended_on if self.chat_ended_on is not None else datetime.now()
         return {
-            "SourceChatId": self.chat_id,
+            "SourceChatId": str(self.chat_id),
             "ParticipantCount": len(self.participants),
             "ChatCount": self.chat_count,
             "ChatLength": self.total_content_length,
-            "ChatStartOn": self.chat_start_on.isoformat() if isinstance(self.chat_start_on, datetime) else str(self.chat_start_on),
-            "ChatEndedOn": self.chat_ended_on.isoformat() if isinstance(self.chat_ended_on, datetime) else str(self.chat_ended_on),
+            "ChatStartOn": chat_start_on.isoformat(),
+            "ChatEndedOn": chat_ended_on.isoformat()
         }
 
 
@@ -152,13 +154,15 @@ class SourceData:
         }
 
     def to_submission_json(self) :
-        return {
-            "DataSource": self.source.name,  # Use .name to convert enum to string
+        json = {
+            "DataSource": self.source.value,  # Use .name to convert enum to string
             "SourceId": self.submission_id,
             "SubmittedBy": self.submission_by,
-            "SubmittedOn": self.submission_date.isoformat() if isinstance(self.submission_date, datetime) else str(self.submission_date),
+            "SubmittedOn": self.submission_date.isoformat(),
             "Chats": [source_chat.to_submission_json() for source_chat in self.source_chats]
         }
+        #print(f"Submission json:{json}")
+        return json
 
 
 # ChatData for Source (final destination data structure)

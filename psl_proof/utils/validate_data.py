@@ -5,11 +5,11 @@ from psl_proof.utils.feature_extraction import get_sentiment_data, get_keywords_
 from psl_proof.utils.submit_data import validate_proof_data
 
 def score_uniqueness(source_data : SourceChatData) -> float:
-    submission_json = source_data.to_submission_json()
-    print(f"submission_json: {submission_json}")
     result = validate_proof_data(
         source_data
     )
+    if result is None:
+        return 0
     return result.uniqueness
 
 
