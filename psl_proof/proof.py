@@ -9,17 +9,19 @@ from psl_proof.models.proof_response import ProofResponse
 from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_base64, deserialize_bloom_filter_base64
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
 from psl_proof.utils.validate_data import validate_data
-
+from psl_proof.utils.submit_data import submit_proof_data
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.proof_response = ProofResponse(dlp_id=config['dlp_id'])
 
-    #RL: Proof Data...
+
     def generate(self) -> ProofResponse:
         """Generate proofs for all input files."""
         logging.info("Starting proof data")
+
+        data_revision = "01.01"
 
         zktls_proof = None
         source_data = None
@@ -47,6 +49,7 @@ class Proof:
             salt
         )
         source_data.submission_by = source_user_hash_64
+
         is_data_authentic = get_is_data_authentic(
             source_data,
             zktls_proof
@@ -54,6 +57,11 @@ class Proof:
         cargo_data = CargoData(
             source_data = source_data,
             source_id = source_user_hash_64
+        )
+
+        #Submit Source data to server
+        submit_proof_data(
+            source_data
         )
 
         metadata = MetaData(
@@ -74,7 +82,8 @@ class Proof:
                 'proof_valid': False,
                 'did_score_content': False,
                 'source': source_data.Source.name,
-                'submit_on': current_datetime,
+                'revision': data_revision,
+                'submitted_on': current_datetime,
                 'chat_data': None
             }
             self.proof_response.metadata = metadata
@@ -104,14 +113,16 @@ class Proof:
             'proof_valid': is_data_authentic,
             'did_score_content': True,
             'source': source_data.source.name,
-            'submit_on': current_datetime,
+            'revision': data_revision,
+            'submitted_on': current_datetime,
             'chat_data': cargo_data.get_chat_list_data()
         }
         self.proof_response.metadata = metadata
 
-        #RL Validate data & obtain unquiness from server
-        # response = submit_data(source_data)...        
-        #RL Todo...
+        #Submit Source data to server
+        submit_proof_data(
+            source_data
+        )
 
         return self.proof_response
 
@@ -147,16 +158,12 @@ def get_telegram_data(
 
 def get_source_data(input_data: Dict[str, Any]) -> SourceData:
 
-    revision = input_data.get('revision', '').upper()
+    revision = input_data.get('revision', '')
     if (revision and revision != "01.01"):
        print(f"Invalid Revision: {revision}")
 
-
     submission_date = datetime.now().timestamp()
-    # Extract and convert the Unix timestamp to a datetime object
-    date_value = input_data.get("submission_date", None)
-    if date_value:
-        submission_date = datetime.utcfromtimestamp(date_value)  # Convert Unix timestamp to datetime
+    print(f"submission_date: {submission_date}")
 
     input_source_value = input_data.get('source', '').upper()
     input_source = None
@@ -166,7 +173,7 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
     else:
         print(f"Unmapped data source: {input_source_value}")
 
-    submission_id = input_data.get('submission_id', '').upper()
+    submission_id = input_data.get('submission_id', '')
 
     input_user = input_data.get('user')
     #print(f"input_user: {input_user}")

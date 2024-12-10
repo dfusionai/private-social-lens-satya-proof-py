@@ -2,7 +2,7 @@ from typing import List, Dict, Optional
 import requests
 from psl_proof.models.cargo_data import SourceData
 
-class ValidationResponse:
+class ValidationResult:
     def __init__(self, uniqueness=0):
         self.uniqueness = uniqueness
 
@@ -19,10 +19,10 @@ class ValidationResponse:
 
 
 # Define the URL of the web service
-topics_url = "https://6f6f-169-0-170-105.ngrok-free.app"  # Replace with your API endpoint
+topics_url = " https://33c2-169-0-170-105.ngrok-free.app"  # Replace with your API endpoint
 
 
-def validate_data(source_data: SourceData) -> Optional[ValidationResponse]:
+def validate_proof_data(source_data: SourceData) -> Optional[ValidationResult]:
     try:
         url = f"{topics_url}/api/validations/validate"
         headers = {"Content-Type": "application/json"}
@@ -42,7 +42,7 @@ def validate_data(source_data: SourceData) -> Optional[ValidationResponse]:
         print("An error occurred:", e)
         return None
 
-def submit_data(source_data: SourceData):
+def submit_proof_data(source_data: SourceData):
     try:
         url = f"{topics_url}/api/validations/submit"
         headers = {"Content-Type": "application/json"}

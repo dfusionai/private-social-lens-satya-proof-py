@@ -168,16 +168,14 @@ class ChatData:
     chat_length: int
 
     sentiment: Dict[str, Any] = field(default_factory=dict)
-    keywords_keybert: Dict[str, Any] = field(default_factory=dict)
-    #keywords_lda: Dict[str, Any] = field(default_factory=dict)
+    keywords: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self):
         return {
             "chat_id": self.chat_id,
             "chat_length": self.chat_length,
-            "sentiment": self.sentiment,                # No need to call .to_dict() for dicts
-            "keywords_keybert": self.keywords_keybert,  # Same for other dict fields
-            #"keywords_lda": self.keywords_lda           # Same for other dict fields
+            "sentiment": self.sentiment,   # No need to call .to_dict() for dicts
+            "keywords": self.keywords,     # Same for other dict fields
         }
 
 # CargoData for Source
