@@ -1,7 +1,7 @@
 from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
-from psl_proof.utils.feature_extraction import get_sentiment_data, get_keywords_keybert, get_keywords_lda
+from psl_proof.utils.feature_extraction import get_sentiment_data, get_keywords_keybert #, get_keywords_lda
 #from utils.submit_data import validate_data, submit_data
 
 def get_user_submited_chat_data(
@@ -95,10 +95,10 @@ def validate_data(
                 source_contents,
                 number_of_keywords
             )
-            chat_keywords_lda = get_keywords_lda(
-                source_contents,
-                number_of_keywords
-            )
+            # chat_keywords_lda = get_keywords_lda(
+            #     source_contents,
+            #     number_of_keywords
+            # )
 
             # Create a ChatData instance and add it to the list
             chat_data = ChatData(
@@ -106,7 +106,7 @@ def validate_data(
                 chat_length=contents_length,
                 sentiment=chat_sentiment,
                 keywords_keybert=chat_keywords_keybert,
-                keywords_lda=chat_keywords_lda
+                # keywords_lda=chat_keywords_lda
             )
             #print(f"chat_data: {chat_data}")
             cargo_data.chat_list.append(

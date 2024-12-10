@@ -7,7 +7,6 @@ import requests
 from datetime import datetime
 from psl_proof.models.proof_response import ProofResponse
 from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_base64, deserialize_bloom_filter_base64
-from psl_proof.utils.feature_extraction import get_keywords_keybert, get_sentiment_data, get_keywords_lda
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
 from psl_proof.utils.validate_data import validate_data
 
