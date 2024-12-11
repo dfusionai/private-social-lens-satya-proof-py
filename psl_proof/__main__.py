@@ -39,7 +39,7 @@ def run() -> None:
     output_path = os.path.join(OUTPUT_DIR, "results.json")
     with open(output_path, 'w') as f:
         json.dump(proof_response.dict(), f, indent=2)
-    logging.info(f"Proof generation complete: {proof_response}")
+    #logging.info(f"Proof generation complete: {proof_response}")
 
 
 def extract_input() -> None:

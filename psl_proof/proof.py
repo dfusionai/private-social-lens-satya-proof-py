@@ -118,7 +118,7 @@ class Proof:
         submit_proof_data(
             source_data
         )
-
+        print(f"proof data: {self.proof_response}")
         return self.proof_response
 
 def get_telegram_data(

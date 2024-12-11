@@ -24,6 +24,9 @@ class SourceChatData:
     chat_start_on: datetime = None
     chat_ended_on: datetime = None
 
+    def chat_id_as_key(self) -> str :
+        return str(self.chat_id)
+
     def timeliness_value(self) -> float:
         if self.total_content_length == 0:
             return 0
@@ -116,7 +119,7 @@ class SourceChatData:
         chat_start_on = self.chat_start_on if self.chat_start_on is not None else datetime.now()
         chat_ended_on = self.chat_ended_on if self.chat_ended_on is not None else datetime.now()
         return {
-            "SourceChatId": str(self.chat_id),
+            "SourceChatId": self.chat_id_as_key(),
             "ParticipantCount": len(self.participants),
             "ChatCount": self.chat_count,
             "ChatLength": self.total_content_length,
@@ -224,3 +227,16 @@ class MetaData:
             "source_id": self.source_id,
             "dlp_id": self.dlp_id
         }
+
+@dataclass
+class SubmissionChat:
+    participant_count: int
+    chat_count: int
+    chat_length: int
+    chat_start_on: datetime
+    chat_ended_on: datetime
+
+@dataclass
+class ChatHistory:
+    source_chat_id : str
+    chat_list: List[SubmissionChat] = field(default_factory=list)

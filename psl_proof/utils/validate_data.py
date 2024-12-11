@@ -1,18 +1,41 @@
-from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
+from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData, ChatHistory, SubmissionChat
 from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
 from psl_proof.utils.feature_extraction import get_sentiment_data, get_keywords_keybert #, get_keywords_lda
-from psl_proof.utils.submit_data import validate_proof_data
+from psl_proof.utils.submit_data import get_historical_chats
 
-def score_uniqueness(source_data : SourceChatData) -> float:
-    result = validate_proof_data(
-        source_data
+def get_uniqueness_score(
+    source_chat: SourceChatData,
+    chat_histories: List[ChatHistory]
+) -> float:
+    # Requirement 1: If chat_histories is empty, return 1
+    if not chat_histories:
+        return 1.0
+
+    chat_ended_on = (
+        source_chat.chat_ended_on if source_chat.chat_ended_on else datetime.now()
     )
-    #print(f"score_uniqueness: {result}")
-    if result is None:
-        return 0
-    return  result.get("uniqueness", 0.00)
+    # Loop through chat_histories to find a match by source_chat_id
+    for history in chat_histories:
+        if history.source_chat_id == source_chat.chat_id_as_key():
+            # Loop through chat_list to find a match by chat_ended_On date
+            for historical_chat in history.chat_list:
+                historical_chat_ended_on = historical_chat.chat_ended_on
 
+                if historical_chat_ended_on.tzinfo is not None:
+                    # Remove timezone info
+                    historical_chat_ended_on = historical_chat_ended_on.replace(tzinfo=None)
+
+                if chat_ended_on.tzinfo is not None:
+                    chat_ended_on = chat_ended_on.replace(tzinfo=None)
+
+                time_in_seconds = (chat_ended_on - historical_chat_ended_on).total_seconds()
+                time_in_hours = int(time_in_seconds // 3600)
+                if time_in_hours < 12: # more than 12 Hours..
+                    return 0.0
+
+    # If no matching source_chat_id is found, return 1
+    return 1.0
 
 def validate_data(
     config: Dict[str, Any],
@@ -22,15 +45,17 @@ def validate_data(
     source_data : SourceChatData = cargo_data.source_data
     source_chats = source_data.source_chats
 
+    #Patrick_ToCheck score_threshold should be 0.5
     score_threshold = 0.5
     total_quality = 0.00
+    total_uniqueness = 0.00
     chat_count = 0
 
     #Validate source data via valiator.api & obtain unquiness
-    proof_data.uniqueness = score_uniqueness(
+    chat_histories = get_historical_chats(
         source_data
     )
-    print(f"Proof_data.uniqueness: {proof_data.uniqueness}")
+    #print(f"chat_histories: {chat_histories}")
 
     # Loop through the chat_data_list
     for source_chat in source_chats:
@@ -50,15 +75,23 @@ def validate_data(
 
             quality = source_chat.quality_score()
             print(f"Chat({chat_id}) - quality: {quality}")
+
             total_quality += quality
+
+            uniqueness = get_uniqueness_score(
+              source_chat,
+              chat_histories
+            )
+            print(f"Chat({chat_id}) - uniqueness: {uniqueness}")
+            total_uniqueness += uniqueness
 
             #print(f"source_contents: {source_contents}")
             # if chat data has meaningful data...
-            if quality > score_threshold:
+            if quality > score_threshold and uniqueness > score_threshold:
                 chat_sentiment = get_sentiment_data(
                     source_contents
                 )
-                chat_keywords_keybert = get_keywords_keybert(
+                chat_keywords = get_keywords_keybert(
                     source_contents
                 )
                 # Create a ChatData instance and add it to the list
@@ -66,17 +99,19 @@ def validate_data(
                     chat_id=source_chat.chat_id,
                     chat_length=contents_length,
                     sentiment=chat_sentiment,
-                    keywords=chat_keywords_keybert
+                    keywords=chat_keywords
                 )
                 #print(f"chat_data: {chat_data}")
                 cargo_data.chat_list.append(
                     chat_data
                 )
             else:
-                #Patrick ToCheck - need to determine the value for score_threshold.
-                print(f"Extract keywords process skiped - quality less than score threshold({score_threshold})")
+                print(f"Extract data skiped - value is below threshold({score_threshold})")
 
     # Calculate uniqueness if there are chats
     if chat_count > 0:
         proof_data.quality = round(total_quality / chat_count, 2)
         print(f"proof_data.quality: {proof_data.quality}")
+
+        proof_data.uniqueness = round(total_uniqueness / chat_count, 2)
+        print(f"proof_data.uniqueness: {proof_data.uniqueness}")

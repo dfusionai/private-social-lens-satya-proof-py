@@ -1,18 +1,18 @@
-from typing import Optional
+from typing import Optional, List
 import requests
 import json
-
-from psl_proof.models.cargo_data import SourceData, DataSource
+from psl_proof.models.cargo_data import SourceData, DataSource, ChatHistory, SubmissionChat
 from datetime import datetime
 
+
 # Define the URL of the web service
-#Patrick ToCheck - need get url from server and stored in env.
+#Patrick_ToCheck - need chanage the url from validator api server, suggestion: stored in env.
 api_url = "https://4bee-169-0-170-105.ngrok-free.app"  # Replace with your API endpoint
 
 
-def validate_proof_data(source_data: SourceData) -> Optional[str]:
+def get_historical_chats(source_data: SourceData) -> Optional[List[ChatHistory]]:
     try:
-        url = f"{api_url}/api/validations/validate"
+        url = f"{api_url}/api/submissions/historical-chats"
         headers = {"Content-Type": "application/json"}
         payload = source_data.to_submission_json()
 
@@ -20,9 +20,30 @@ def validate_proof_data(source_data: SourceData) -> Optional[str]:
 
         if response.status_code == 200:
             try:
-                jsondata = response.json()
-                #print("Validation succeeded:", jsondata)
-                return jsondata
+                chat_histories_json = response.json()
+
+                # Map JSON response to ChatHistory objects
+                chat_histories = []
+                for chat_history_data in chat_histories_json:
+                    #print(f"chat_history_data:{chat_history_data}")
+                    chat_list = [
+                        SubmissionChat(
+                            participant_count=chat.get("participantCount", 0),
+                            chat_count=chat.get("chatCount", 0),
+                            chat_length=chat.get("chatLength", 0),
+                            chat_start_on=datetime.fromisoformat(chat["chatStartOn"]),
+                            chat_ended_on=datetime.fromisoformat(chat["chatEndedOn"])
+                        )
+                        for chat in chat_history_data.get("chats", [])
+                    ]
+
+                    chat_history = ChatHistory(
+                        source_chat_id=chat_history_data.get("sourceChatId", ""),
+                        chat_list=chat_list
+                    )
+                    chat_histories.append(chat_history)
+
+                return chat_histories
             except ValueError as e:
                 print("Error parsing JSON response:", e)
                 return None
@@ -37,7 +58,7 @@ def validate_proof_data(source_data: SourceData) -> Optional[str]:
 
 def submit_proof_data(source_data: SourceData):
     try:
-        url = f"{api_url}/api/validations/submit"
+        url = f"{api_url}/api/submissions/submit-data"
         headers = {"Content-Type": "application/json"}
         payload = source_data.to_submission_json()
 
