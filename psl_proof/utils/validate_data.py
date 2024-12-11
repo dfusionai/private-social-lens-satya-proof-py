@@ -8,9 +8,10 @@ def score_uniqueness(source_data : SourceChatData) -> float:
     result = validate_proof_data(
         source_data
     )
+    #print(f"score_uniqueness: {result}")
     if result is None:
         return 0
-    return result.uniqueness
+    return  result.get("uniqueness", 0.00)
 
 
 def validate_data(
@@ -22,8 +23,6 @@ def validate_data(
     source_chats = source_data.source_chats
 
     score_threshold = 0.5
-    number_of_keywords = 10
-
     total_quality = 0.00
     chat_count = 0
 
@@ -31,6 +30,7 @@ def validate_data(
     proof_data.uniqueness = score_uniqueness(
         source_data
     )
+    print(f"Proof_data.uniqueness: {proof_data.uniqueness}")
 
     # Loop through the chat_data_list
     for source_chat in source_chats:
@@ -41,7 +41,7 @@ def validate_data(
         contents_length = 0
         if source_chat.contents:  # Ensure chat_contents is not None
             source_contents = source_chat.content_as_text()
-            print(f"source_contents: {source_contents}")
+            #print(f"source_contents: {source_contents}")
             contents_length = len(source_contents)
 
         if (contents_length > 0):
@@ -55,13 +55,11 @@ def validate_data(
             #print(f"source_contents: {source_contents}")
             # if chat data has meaningful data...
             if quality > score_threshold:
-                # content is unique...
                 chat_sentiment = get_sentiment_data(
                     source_contents
                 )
                 chat_keywords_keybert = get_keywords_keybert(
-                    source_contents,
-                    number_of_keywords
+                    source_contents
                 )
                 # Create a ChatData instance and add it to the list
                 chat_data = ChatData(
@@ -74,6 +72,9 @@ def validate_data(
                 cargo_data.chat_list.append(
                     chat_data
                 )
+            else:
+                #Patrick ToCheck - need to determine the value for score_threshold.
+                print(f"Extract keywords process skiped - quality less than score threshold({score_threshold})")
 
     # Calculate uniqueness if there are chats
     if chat_count > 0:
