@@ -9,7 +9,7 @@ from psl_proof.models.proof_response import ProofResponse
 from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_base64, deserialize_bloom_filter_base64
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
 from psl_proof.utils.validate_data import validate_data
-from psl_proof.utils.submit_data import submit_proof_data
+from psl_proof.utils.submit_data import submit_data
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
@@ -35,6 +35,7 @@ class Proof:
 
                     if input_filename == 'zktls_proof.json':
                         zktls_proof = input_data.get('zktls_proof', None)
+
                         continue
 
                     elif input_filename == 'chats.json':
@@ -49,11 +50,18 @@ class Proof:
             salt
         )
         source_data.submission_by = source_user_hash_64
-
         is_data_authentic = get_is_data_authentic(
             source_data,
             zktls_proof
         )
+
+        proof_failed_reason = ""
+        if is_data_authentic :
+            #is_data_authentic = true
+            proof_failed_reason = "Fail reason: xyz"
+        else :
+            proof_failed_reason = "Data is not authentic"
+
         cargo_data = CargoData(
             source_data = source_data,
             source_id = source_user_hash_64
@@ -67,6 +75,7 @@ class Proof:
         self.proof_response.ownership = 1.0 if is_data_authentic else 0.0
         self.proof_response.authenticity = 1.0 if is_data_authentic else 0.0
 
+
         current_datetime = datetime.now().isoformat()
         if not is_data_authentic: #short circuit so we don't waste analysis
             self.proof_response.score = 0.0
@@ -74,7 +83,9 @@ class Proof:
             self.proof_response.quality = 0.0
             self.proof_response.valid = False
             self.proof_response.attributes = {
+
                 'proof_valid': False,
+                'proof_failed_reason': proof_failed_reason,
                 'did_score_content': False,
                 'source': source_data.Source.name,
                 'revision': data_revision,
@@ -115,7 +126,8 @@ class Proof:
         self.proof_response.metadata = metadata
 
         #Submit Source data to server
-        submit_proof_data(
+        submit_data(
+            self.config,
             source_data
         )
         print(f"proof data: {self.proof_response}")

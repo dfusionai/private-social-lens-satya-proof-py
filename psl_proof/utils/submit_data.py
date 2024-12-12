@@ -1,18 +1,26 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import requests
 import json
 from psl_proof.models.cargo_data import SourceData, DataSource, ChatHistory, SubmissionChat
 from datetime import datetime
 
 
-# Define the URL of the web service
-#Patrick_ToCheck - need chanage the url from validator api server, suggestion: stored in env.
-api_url = "https://4bee-169-0-170-105.ngrok-free.app"  # Replace with your API endpoint
+def get_api_url(
+    config: Dict[str, Any],
+    api_path: str
+    ) -> str:
+    base_url = config['validator_base_api_url']
+    url = f"{base_url}/{api_path}"
+    print(f"Validation.WebApi - URL: {url}")
+    return url
 
 
-def get_historical_chats(source_data: SourceData) -> Optional[List[ChatHistory]]:
+def get_historical_chats(
+        config: Dict[str, Any],
+        source_data: SourceData
+    ) -> Optional[List[ChatHistory]]:
     try:
-        url = f"{api_url}/api/submissions/historical-chats"
+        url = get_api_url(config,"api/submissions/historical-chats")
         headers = {"Content-Type": "application/json"}
         payload = source_data.to_submission_json()
 
@@ -56,9 +64,12 @@ def get_historical_chats(source_data: SourceData) -> Optional[List[ChatHistory]]
         return None
 
 
-def submit_proof_data(source_data: SourceData):
+def submit_data(
+    config: Dict[str, Any],
+    source_data: SourceData
+):
     try:
-        url = f"{api_url}/api/submissions/submit-data"
+        url = get_api_url(config,"api/submissions/submit-data")
         headers = {"Content-Type": "application/json"}
         payload = source_data.to_submission_json()
 

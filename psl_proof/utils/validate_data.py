@@ -53,6 +53,7 @@ def validate_data(
 
     #Validate source data via valiator.api & obtain unquiness
     chat_histories = get_historical_chats(
+        config,
         source_data
     )
     #print(f"chat_histories: {chat_histories}")
@@ -106,7 +107,7 @@ def validate_data(
                     chat_data
                 )
             else:
-                print(f"Extract data skiped - value is below threshold({score_threshold})")
+                print(f"Extract data skiped - values are below threshold({score_threshold})")
 
     # Calculate uniqueness if there are chats
     if chat_count > 0:
