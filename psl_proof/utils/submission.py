@@ -1,18 +1,25 @@
 from typing import Optional, List, Dict, Any
 import requests
 import json
-from psl_proof.models.cargo_data import SourceData, DataSource, ChatHistory, SubmissionChat
+from dataclasses import dataclass, field
 from datetime import datetime
 
+from psl_proof.models.cargo_data import SourceData, DataSource
+from psl_proof.utils.validation_api import get_validation_api_url
 
-def get_api_url(
-    config: Dict[str, Any],
-    api_path: str
-    ) -> str:
-    base_url = config['validator_base_api_url']
-    url = f"{base_url}/{api_path}"
-    print(f"Validation.WebApi - URL: {url}")
-    return url
+
+@dataclass
+class SubmissionChat:
+    participant_count: int
+    chat_count: int
+    chat_length: int
+    chat_start_on: datetime
+    chat_ended_on: datetime
+
+@dataclass
+class ChatHistory:
+    source_chat_id : str
+    chat_list: List[SubmissionChat] = field(default_factory=list)
 
 
 def get_historical_chats(
@@ -20,7 +27,10 @@ def get_historical_chats(
         source_data: SourceData
     ) -> Optional[List[ChatHistory]]:
     try:
-        url = get_api_url(config,"api/submissions/historical-chats")
+        url = get_validation_api_url(
+            config,
+            "api/submissions/historical-chats"
+        )
         headers = {"Content-Type": "application/json"}
         payload = source_data.to_submission_json()
 
@@ -69,7 +79,10 @@ def submit_data(
     source_data: SourceData
 ):
     try:
-        url = get_api_url(config,"api/submissions/submit-data")
+        url = get_validation_api_url(
+            config,
+            "api/submissions/submit-data"
+        )
         headers = {"Content-Type": "application/json"}
         payload = source_data.to_submission_json()
 

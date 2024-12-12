@@ -1,8 +1,9 @@
-from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData, ChatHistory, SubmissionChat
+from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
 from psl_proof.utils.feature_extraction import get_sentiment_data, get_keywords_keybert #, get_keywords_lda
-from psl_proof.utils.submit_data import get_historical_chats
+from psl_proof.utils.submission import get_historical_chats, ChatHistory, SubmissionChat
+
 
 def get_uniqueness_score(
     source_chat: SourceChatData,

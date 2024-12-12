@@ -228,15 +228,4 @@ class MetaData:
             "dlp_id": self.dlp_id
         }
 
-@dataclass
-class SubmissionChat:
-    participant_count: int
-    chat_count: int
-    chat_length: int
-    chat_start_on: datetime
-    chat_ended_on: datetime
 
-@dataclass
-class ChatHistory:
-    source_chat_id : str
-    chat_list: List[SubmissionChat] = field(default_factory=list)

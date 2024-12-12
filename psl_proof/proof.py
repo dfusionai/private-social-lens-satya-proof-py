@@ -9,7 +9,7 @@ from psl_proof.models.proof_response import ProofResponse
 from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_base64, deserialize_bloom_filter_base64
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
 from psl_proof.utils.validate_data import validate_data
-from psl_proof.utils.submit_data import submit_data
+from psl_proof.utils.submission import submit_data
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
