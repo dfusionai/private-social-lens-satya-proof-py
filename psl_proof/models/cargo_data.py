@@ -128,19 +128,23 @@ class SourceChatData:
         }
 
 
+
+
 # SourceData with enum and chat data
 @dataclass
 class SourceData:
     source: DataSource         # "telegram"
     user: str
+    submission_token: str
     submission_id: str
     submission_by: str
     submission_date: datetime
     source_chats: List[SourceChatData]  # List of SourceChatData instances
 
-    def __init__(self, source, submission_id, submission_by, submission_date, user, source_chats=None):
+    def __init__(self, source, submission_token, submission_id, submission_by, submission_date, user, source_chats=None):
         self.source = source
         self.user = user
+        self.submission_token = submission_token
         self.submission_id = submission_id
         self.submission_by = submission_by
         self.submission_date = submission_date
@@ -167,6 +171,12 @@ class SourceData:
         #print(f"Submission json:{json}")
         return json
 
+    def to_verification_json(self) -> dict:
+        return {
+            "VerificationType": 0, # VerificationToken.
+            "Token": self.submission_token,
+            "Reference": self.submission_id
+        }
 
 # ChatData for Source (final destination data structure)
 @dataclass
@@ -227,5 +237,3 @@ class MetaData:
             "source_id": self.source_id,
             "dlp_id": self.dlp_id
         }
-
-

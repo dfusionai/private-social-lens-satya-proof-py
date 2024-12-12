@@ -10,6 +10,7 @@ from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_ba
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
 from psl_proof.utils.validate_data import validate_data
 from psl_proof.utils.submission import submit_data
+from psl_proof.utils.verification import verify_token, VerifyTokenResult
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
@@ -57,8 +58,15 @@ class Proof:
 
         proof_failed_reason = ""
         if is_data_authentic :
-            #is_data_authentic = true
-            proof_failed_reason = "Fail reason: xyz"
+            verify_result = verify_token(
+                self.config,
+                source_data
+            )
+            is_data_authentic = verify_result
+            if is_data_authentic:
+                print(f"verify_result: {verify_result}")
+                is_data_authentic = verify_result.is_valid
+                proof_failed_reason = verify_result.error_text
         else :
             proof_failed_reason = "Data is not authentic"
 
@@ -78,16 +86,16 @@ class Proof:
 
         current_datetime = datetime.now().isoformat()
         if not is_data_authentic: #short circuit so we don't waste analysis
+            print(f"Not authentic: {proof_failed_reason}")
             self.proof_response.score = 0.0
             self.proof_response.uniqueness = 0.0
             self.proof_response.quality = 0.0
             self.proof_response.valid = False
             self.proof_response.attributes = {
-
                 'proof_valid': False,
                 'proof_failed_reason': proof_failed_reason,
                 'did_score_content': False,
-                'source': source_data.Source.name,
+                'source': source_data.source.name,
                 'revision': data_revision,
                 'submitted_on': current_datetime,
                 'chat_data': None
@@ -181,6 +189,8 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
     else:
         print(f"Unmapped data source: {input_source_value}")
 
+    submission_token = input_data.get('submission_token', '')
+
     submission_id = input_data.get('submission_id', '')
 
     input_user = input_data.get('user')
@@ -189,6 +199,7 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
     source_data = SourceData(
         source=input_source,
         user=input_user,
+        submission_token = submission_token,
         submission_id = submission_id,
         submission_by = input_user,
         submission_date = submission_date
