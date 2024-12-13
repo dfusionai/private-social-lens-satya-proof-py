@@ -116,13 +116,13 @@ class Proof:
             and self.proof_response.quality >= score_threshold
             and self.proof_response.uniqueness >= score_threshold
         )
-        self.proof_response.score = (
+        total_score = (
             self.proof_response.authenticity * 0.25
             + self.proof_response.ownership * 0.25
             + self.proof_response.quality * 0.25
             + self.proof_response.uniqueness * 0.25
         )
-
+        self.proof_response.score = round(total_score, 2)
         self.proof_response.attributes = {
             'proof_valid': is_data_authentic,
             'did_score_content': True,
