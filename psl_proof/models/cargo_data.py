@@ -164,6 +164,7 @@ class SourceData:
         json = {
             "DataSource": self.source.value,  # Use .name to convert enum to string
             "SourceId": self.submission_id,
+            "SubmissionToken": self.submission_token,
             "SubmittedBy": self.submission_by,
             "SubmittedOn": self.submission_date.isoformat(),
             "Chats": [source_chat.to_submission_json() for source_chat in self.source_chats]

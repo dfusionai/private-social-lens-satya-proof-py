@@ -190,6 +190,7 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
         raise RuntimeError(f"Unmapped data source: {input_source_value}")
 
     submission_token = input_data.get('submission_token', '')
+    #print("submission_token: {submission_token}")
 
     submission_id = input_data.get('submission_id', '')
 
