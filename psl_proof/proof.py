@@ -68,7 +68,7 @@ class Proof:
                 is_data_authentic = verify_result.is_valid
                 proof_failed_reason = verify_result.error_text
         else :
-            proof_failed_reason = "Data is not authentic"
+            proof_failed_reason = "The provided data could not be verified as authentic."
 
         cargo_data = CargoData(
             source_data = source_data,
@@ -86,7 +86,7 @@ class Proof:
 
         current_datetime = datetime.now().isoformat()
         if not is_data_authentic: #short circuit so we don't waste analysis
-            print(f"Not authentic: {proof_failed_reason}")
+            print(f"Validation proof failed: {proof_failed_reason}")
             self.proof_response.score = 0.0
             self.proof_response.uniqueness = 0.0
             self.proof_response.quality = 0.0
@@ -176,7 +176,7 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
 
     revision = input_data.get('revision', '')
     if (revision and revision != "01.01"):
-       print(f"Invalid Revision: {revision}")
+       raise RuntimeError(f"Invalid Revision: {revision}")
 
     submission_date = datetime.now()
     #print(f"submission_date: {submission_date}")
@@ -187,7 +187,7 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
     if input_source_value == 'TELEGRAM':
         input_source = DataSource.telegram
     else:
-        print(f"Unmapped data source: {input_source_value}")
+        raise RuntimeError(f"Unmapped data source: {input_source_value}")
 
     submission_token = input_data.get('submission_token', '')
 
@@ -224,7 +224,7 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
                         source_chat
                     )
                 else:
-                    print(f"Unhandled data source: {input_source}")
+                    raise RuntimeError(f"Unhandled data source: {input_source}")
             source_chats.append(
                 source_chat
             )

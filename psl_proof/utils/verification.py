@@ -29,12 +29,12 @@ def verify_token(config: Dict[str, Any], source_data: SourceData) -> Optional[Ve
                 )
                 return result
             except ValueError as e:
-                print("Error parsing JSON response:", e)  # Replace with logging in production
-                return None
+                print("Error parsing JSON response:", e)
+                RuntimeError("Error parsing JSON response:", e)  # Replace with logging in production
         else:
             print(f"verify_token failed. Status code: {response.status_code}, Response: {response.text}")  # Replace with logging
-            return None
+            RuntimeError(f"verify_token failed. Status code: {response.status_code}, Response: {response.text}")  # Replace with logging
 
     except requests.exceptions.RequestException as e:
-        print("An error occurred:", e)  # Replace with logging
-        return None
+        print("verify_token:", e)  # Replace with logging
+        RuntimeError("verify_token:", e)  # Replace with logging

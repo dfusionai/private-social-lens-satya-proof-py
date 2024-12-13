@@ -32,7 +32,7 @@ def get_uniqueness_score(
 
                 time_in_seconds = (chat_ended_on - historical_chat_ended_on).total_seconds()
                 time_in_hours = int(time_in_seconds // 3600)
-                if time_in_hours < 12: # more than 12 Hours..
+                if time_in_hours < 12: # within 12 Hours..
                     return 0.0
 
     # If no matching source_chat_id is found, return 1

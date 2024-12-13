@@ -63,14 +63,14 @@ def get_historical_chats(
 
                 return chat_histories
             except ValueError as e:
-                print("Error parsing JSON response:", e)
+                RuntimeError("Error parsing JSON response:", e)
                 return None
         else:
-            print(f"Validation failed. Status code: {response.status_code}, Response: {response.text}")
+            RuntimeError(f"Validation failed. Status code: {response.status_code}, Response: {response.text}")
             return None
 
     except requests.exceptions.RequestException as e:
-        print("An error occurred:", e)
+        RuntimeError("get_historical_chats:", e)
         return None
 
 
@@ -89,8 +89,8 @@ def submit_data(
         response = requests.post(url, json=payload, headers=headers)
 
         if response.status_code != 200:
-            print(f"Submission failed. Status code: {response.status_code}, Response: {response.text}")
+            RuntimeError(f"Submission failed. Status code: {response.status_code}, Response: {response.text}")
 
 
     except requests.exceptions.RequestException as e:
-        print("An error occurred:", e)
+        RuntimeError("submit_data:", e)
