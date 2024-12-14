@@ -31,27 +31,29 @@ class SourceChatData:
         if self.total_content_length == 0:
             return 0
         # tav = (𝛴 litsi) / (𝛴 li)
-        time_avg = self.total_content_value / self.total_content_length
+        time_avg = float(self.total_content_value) / float(self.total_content_length)
         # a = ln(2) / thl
-        half_life = 60  # 60 minutes
+        half_life = 600.0  # 600 minutes
         time_decay = math.log(2) / half_life
         # t = exp(-atav)
         return math.exp(- time_decay * time_avg)  # range 0 to 1
 
     def thoughtfulness_of_conversation(self) -> float:
         n = len(self.participants)  # n: number of participants
-        u = 2  # 𝜇: optimal number of participants
-        d = 1  # 𝜎: standard deviation of the curve
+        if n is 1:
+            return 0.0
+        u = 3.0  # 𝜇: optimal number of participants
+        d = 5.0  # 𝜎: standard deviation of the curve
 
         # Formula: p = exp(-(n-𝜇) / (2𝜎^2))
         return math.exp(-(n - u) / (2 * d ** 2))  # range 0 to 1
 
     def contextualness_of_conversation(self)  -> float:
         c = self.total_content_length #total token length, c, of the text data
-        m = 2 #midpoint
-        k = 1 #key parameters.
+        m = 2.0 #midpoint
+        k = 1.0 #key parameters.
         # l=1/(1+exp(-k(c-c0)))
-        return 1/(1 + math.exp(-k*(c-m)))
+        return 1.0/(1.0 + math.exp(-k*(c-m)))
 
     def quality_score(self) -> float :
         a = 1 # factor

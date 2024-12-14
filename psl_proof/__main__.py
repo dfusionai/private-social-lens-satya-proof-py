@@ -16,10 +16,10 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 def load_config() -> Dict[str, Any]:
     """Load proof configuration from environment variables."""
     config = {
-        'dlp_id': 1234,  # Set your own DLP ID here
+        'dlp_id': 16 # MOKSHA
         'input_dir': INPUT_DIR,
-        'salt': 'replace-this-salt',  # TODO: replace this so that we can salt in a better way
-        'validator_base_api_url': 'https://89fb-169-0-170-105.ngrok-free.app' #Patrick_ToCheck
+        'salt': '5EkntCWI'
+        'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
     return config

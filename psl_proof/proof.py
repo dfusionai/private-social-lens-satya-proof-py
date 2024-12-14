@@ -23,8 +23,6 @@ class Proof:
         logging.info("Starting proof data")
 
         data_revision = "01.01"
-
-        zktls_proof = None
         source_data = None
 
         for input_filename in os.listdir(self.config['input_dir']):
@@ -32,14 +30,7 @@ class Proof:
             if os.path.splitext(input_file)[1].lower() == '.json':
                 with open(input_file, 'r') as f:
                     input_data = json.load(f)
-                    #print(f"Input Data: {input_data}")
-
-                    if input_filename == 'zktls_proof.json':
-                        zktls_proof = input_data.get('zktls_proof', None)
-
-                        continue
-
-                    elif input_filename == 'chats.json':
+                    if input_filename == 'chats.json':
                         source_data = get_source_data(
                             input_data
                         )
@@ -51,24 +42,16 @@ class Proof:
             salt
         )
         source_data.submission_by = source_user_hash_64
-        is_data_authentic = get_is_data_authentic(
-            source_data,
-            zktls_proof
-        )
-
         proof_failed_reason = ""
-        if is_data_authentic :
-            verify_result = verify_token(
-                self.config,
-                source_data
-            )
-            is_data_authentic = verify_result
-            if is_data_authentic:
-                print(f"verify_result: {verify_result}")
-                is_data_authentic = verify_result.is_valid
-                proof_failed_reason = verify_result.error_text
-        else :
-            proof_failed_reason = "The provided data could not be verified as authentic."
+        verify_result = verify_token(
+            self.config,
+            source_data
+        )
+        is_data_authentic = verify_result
+        if is_data_authentic:
+            print(f"verify_result: {verify_result}")
+            is_data_authentic = verify_result.is_valid
+            proof_failed_reason = verify_result.error_text
 
         cargo_data = CargoData(
             source_data = source_data,
@@ -230,14 +213,3 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
                 source_chat
             )
     return source_data
-
-
-def get_is_data_authentic(content, zktls_proof) -> bool:
-    """Determine if the submitted data is authentic by checking the content against a zkTLS proof"""
-    return 1.0
-
-def get_user_submission_freshness(source, user) -> float:
-    """Compute User Submission freshness"""
-    #TODO: Get the IPFS data and check the attributes for timestamp of last submission
-    #TODO: Implement cool-down logic so that there is a cool down for one particular social media account. I.E. someone who just submitted will get a very low number
-    return 1.0
