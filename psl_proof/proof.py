@@ -27,14 +27,12 @@ class Proof:
 
         for input_filename in os.listdir(self.config['input_dir']):
             input_file = os.path.join(self.config['input_dir'], input_filename)
-            if os.path.splitext(input_file)[1].lower() == '.json':
-                with open(input_file, 'r') as f:
-                    input_data = json.load(f)
-                    if input_filename == 'chats.json':
-                        source_data = get_source_data(
-                            input_data
-                        )
-                        continue
+            with open(input_file, 'r') as f:
+                input_data = json.load(f)
+                source_data = get_source_data(
+                    input_data
+                )
+                break
 
         salt = self.config['salt']
         source_user_hash_64 = salted_data(
