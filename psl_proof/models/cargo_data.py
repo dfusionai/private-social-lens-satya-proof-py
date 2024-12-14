@@ -40,7 +40,7 @@ class SourceChatData:
 
     def thoughtfulness_of_conversation(self) -> float:
         n = len(self.participants)  # n: number of participants
-        if n is 1:
+        if n == 1:
             return 0.0
         u = 3.0  # 𝜇: optimal number of participants
         d = 5.0  # 𝜎: standard deviation of the curve

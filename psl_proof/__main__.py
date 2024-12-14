@@ -16,9 +16,9 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 def load_config() -> Dict[str, Any]:
     """Load proof configuration from environment variables."""
     config = {
-        'dlp_id': 4
+        'dlp_id': 4,
         'input_dir': INPUT_DIR,
-        'salt': '5EkntCWI'
+        'salt': '5EkntCWI',
         'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
