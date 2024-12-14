@@ -1,7 +1,6 @@
 from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
-from psl_proof.utils.feature_extraction import get_sentiment_data, get_keywords_keybert #, get_keywords_lda
 from psl_proof.utils.submission import get_historical_chats, ChatHistory, SubmissionChat
 
 
@@ -90,18 +89,10 @@ def validate_data(
             #print(f"source_contents: {source_contents}")
             # if chat data has meaningful data...
             if quality > score_threshold and uniqueness > score_threshold:
-                chat_sentiment = get_sentiment_data(
-                    source_contents
-                )
-                chat_keywords = get_keywords_keybert(
-                    source_contents
-                )
                 # Create a ChatData instance and add it to the list
                 chat_data = ChatData(
                     chat_id=source_chat.chat_id,
-                    chat_length=contents_length,
-                    sentiment=chat_sentiment,
-                    keywords=chat_keywords
+                    chat_length=contents_length
                 )
                 #print(f"chat_data: {chat_data}")
                 cargo_data.chat_list.append(
