@@ -16,9 +16,10 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 def load_config() -> Dict[str, Any]:
     """Load proof configuration from environment variables."""
     config = {
-        'dlp_id': 1234,  # Set your own DLP ID here
+        'dlp_id': 16 # MOKSHA
         'input_dir': INPUT_DIR,
-        'salt': 'replace-this-salt' # TODO: replace this so that we can salt in a better way
+        'salt': '5EkntCWI'
+        'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
     return config
@@ -39,7 +40,7 @@ def run() -> None:
     output_path = os.path.join(OUTPUT_DIR, "results.json")
     with open(output_path, 'w') as f:
         json.dump(proof_response.dict(), f, indent=2)
-    logging.info(f"Proof generation complete: {proof_response}")
+    #logging.info(f"Proof generation complete: {proof_response}")
 
 
 def extract_input() -> None:

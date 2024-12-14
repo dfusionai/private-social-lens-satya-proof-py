@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Enum for DataSource
 class DataSource(Enum):
-    telegram = 1
+    telegram = 0
 
 # Source Chat Data
 @dataclass
@@ -24,31 +24,36 @@ class SourceChatData:
     chat_start_on: datetime = None
     chat_ended_on: datetime = None
 
+    def chat_id_as_key(self) -> str :
+        return str(self.chat_id)
+
     def timeliness_value(self) -> float:
         if self.total_content_length == 0:
             return 0
         # tav = (𝛴 litsi) / (𝛴 li)
-        time_avg = self.total_content_value / self.total_content_length
+        time_avg = float(self.total_content_value) / float(self.total_content_length)
         # a = ln(2) / thl
-        half_life = 60  # 60 minutes
+        half_life = 600.0  # 600 minutes
         time_decay = math.log(2) / half_life
         # t = exp(-atav)
         return math.exp(- time_decay * time_avg)  # range 0 to 1
 
     def thoughtfulness_of_conversation(self) -> float:
         n = len(self.participants)  # n: number of participants
-        u = 2  # 𝜇: optimal number of participants
-        d = 1  # 𝜎: standard deviation of the curve
+        if n is 1:
+            return 0.0
+        u = 3.0  # 𝜇: optimal number of participants
+        d = 5.0  # 𝜎: standard deviation of the curve
 
         # Formula: p = exp(-(n-𝜇) / (2𝜎^2))
         return math.exp(-(n - u) / (2 * d ** 2))  # range 0 to 1
 
     def contextualness_of_conversation(self)  -> float:
         c = self.total_content_length #total token length, c, of the text data
-        m = 2 #midpoint
-        k = 1 #key parameters.
+        m = 2.0 #midpoint
+        k = 1.0 #key parameters.
         # l=1/(1+exp(-k(c-c0)))
-        return 1/(1 + math.exp(-k*(c-m)))
+        return 1.0/(1.0 + math.exp(-k*(c-m)))
 
     def quality_score(self) -> float :
         a = 1 # factor
@@ -83,13 +88,13 @@ class SourceChatData:
             time_in_minutes = int(time_in_seconds // 60)
 
             if (self.chat_start_on):
-               if (self.chat_start_on < chat_timestamp):
+               if (self.chat_start_on > chat_timestamp):
                   self.chat_start_on = chat_timestamp
             else :
                self.chat_start_on = chat_timestamp
 
             if (self.chat_ended_on):
-               if (self.chat_ended_on > chat_timestamp):
+               if (self.chat_ended_on < chat_timestamp):
                   self.chat_ended_on = chat_timestamp
             else :
                self.chat_ended_on = chat_timestamp
@@ -113,14 +118,18 @@ class SourceChatData:
         }
 
     def to_submission_json(self) -> dict:
+        chat_start_on = self.chat_start_on if self.chat_start_on is not None else datetime.now()
+        chat_ended_on = self.chat_ended_on if self.chat_ended_on is not None else datetime.now()
         return {
-            "SourceChatId": self.chat_id,
+            "SourceChatId": self.chat_id_as_key(),
             "ParticipantCount": len(self.participants),
             "ChatCount": self.chat_count,
             "ChatLength": self.total_content_length,
-            "ChatStartOn": self.chat_start_on.isoformat() if isinstance(self.chat_start_on, datetime) else str(self.chat_start_on),
-            "ChatEndedOn": self.chat_ended_on.isoformat() if isinstance(self.chat_ended_on, datetime) else str(self.chat_ended_on),
+            "ChatStartOn": chat_start_on.isoformat(),
+            "ChatEndedOn": chat_ended_on.isoformat()
         }
+
+
 
 
 # SourceData with enum and chat data
@@ -128,14 +137,16 @@ class SourceChatData:
 class SourceData:
     source: DataSource         # "telegram"
     user: str
+    submission_token: str
     submission_id: str
     submission_by: str
     submission_date: datetime
     source_chats: List[SourceChatData]  # List of SourceChatData instances
 
-    def __init__(self, source, submission_id, submission_by, submission_date, user, source_chats=None):
+    def __init__(self, source, submission_token, submission_id, submission_by, submission_date, user, source_chats=None):
         self.source = source
         self.user = user
+        self.submission_token = submission_token
         self.submission_id = submission_id
         self.submission_by = submission_by
         self.submission_date = submission_date
@@ -152,14 +163,23 @@ class SourceData:
         }
 
     def to_submission_json(self) :
-        return {
-            "DataSource": self.source.name,  # Use .name to convert enum to string
+        json = {
+            "DataSource": self.source.value,  # Use .name to convert enum to string
             "SourceId": self.submission_id,
+            "SubmissionToken": self.submission_token,
             "SubmittedBy": self.submission_by,
-            "SubmittedOn": self.submission_date.isoformat() if isinstance(self.submission_date, datetime) else str(self.submission_date),
+            "SubmittedOn": self.submission_date.isoformat(),
             "Chats": [source_chat.to_submission_json() for source_chat in self.source_chats]
         }
+        #print(f"Submission json:{json}")
+        return json
 
+    def to_verification_json(self) -> dict:
+        return {
+            "VerificationType": 0, # VerificationToken.
+            "Token": self.submission_token,
+            "Reference": self.submission_id
+        }
 
 # ChatData for Source (final destination data structure)
 @dataclass
@@ -168,16 +188,14 @@ class ChatData:
     chat_length: int
 
     sentiment: Dict[str, Any] = field(default_factory=dict)
-    keywords_keybert: Dict[str, Any] = field(default_factory=dict)
-    #keywords_lda: Dict[str, Any] = field(default_factory=dict)
+    keywords: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self):
         return {
             "chat_id": self.chat_id,
             "chat_length": self.chat_length,
-            "sentiment": self.sentiment,                # No need to call .to_dict() for dicts
-            "keywords_keybert": self.keywords_keybert,  # Same for other dict fields
-            #"keywords_lda": self.keywords_lda           # Same for other dict fields
+            "sentiment": self.sentiment,   # No need to call .to_dict() for dicts
+            "keywords": self.keywords,     # Same for other dict fields
         }
 
 # CargoData for Source

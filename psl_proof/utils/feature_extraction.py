@@ -34,7 +34,10 @@ def get_keywords_keybert(chats):
 #     return keywords
 
 def get_sentiment_data(chats):
-    sentiment_analyzer = pipeline("sentiment-analysis", model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    #Patrick_ToCheck this model do not work...
+    #sentiment_analyzer = pipeline("sentiment-analysis", model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    sentiment_analyzer = pipeline("sentiment-analysis", model="cardiffnlp/twitter-xlm-roberta-base-sentiment-multilingual")
+
     messages = chats.split(">") #TODO use real way to split out different messages
     #TODO: make sure no single message is too long for classification, can break it up if length too long
     sentiments = sentiment_analyzer(messages)
