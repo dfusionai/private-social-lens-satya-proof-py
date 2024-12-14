@@ -97,15 +97,12 @@ class Proof:
             and self.proof_response.quality >= score_threshold
             and self.proof_response.uniqueness >= score_threshold
         )
-        total_score = (
-            self.proof_response.authenticity * 0.25
-            + self.proof_response.ownership * 0.25
-            + self.proof_response.quality * 0.25
-            + self.proof_response.uniqueness * 0.25
+        total_score = 0.0 if not self.proof_response.valid else (
+              self.proof_response.quality * 0.5
+            + self.proof_response.uniqueness * 0.5
         )
         self.proof_response.score = round(total_score, 2)
         self.proof_response.attributes = {
-            'proof_valid': is_data_authentic,
             'did_score_content': True,
             'source': source_data.source.name,
             'revision': data_revision,
@@ -188,7 +185,6 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
     )
 
     input_chats = input_data.get('chats', [])
-    #print(f"input_chats: {input_chats}")
     source_chats = source_data.source_chats
 
     for input_chat in input_chats:
