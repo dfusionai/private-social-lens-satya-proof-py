@@ -1,7 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
-import numpy as np
 import math
 from typing import Union
 
@@ -215,9 +214,7 @@ class CargoData:
 
     @staticmethod
     def convert_to_serializable(obj: Any) -> Any:
-        if isinstance(obj, np.float32):
-            return float(obj)  # Convert float32 to float
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             return {k: CargoData.convert_to_serializable(v) for k, v in obj.items()}  # Recursively handle dictionary values
         elif isinstance(obj, list):
             return [CargoData.convert_to_serializable(item) for item in obj]  # Recursively handle list items
