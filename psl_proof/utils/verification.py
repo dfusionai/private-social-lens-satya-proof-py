@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Any
 import requests
+import logging
 from dataclasses import dataclass
 from psl_proof.models.cargo_data import SourceData
 from psl_proof.utils.validation_api import get_validation_api_url
@@ -29,12 +30,15 @@ def verify_token(config: Dict[str, Any], source_data: SourceData) -> Optional[Ve
                 )
                 return result
             except ValueError as e:
-                print("Error parsing JSON response:", e)
-                RuntimeError("Error parsing JSON response:", e)  # Replace with logging in production
+                logging.error(f"Error during parsing verification status: {e}")
+                traceback.print_exc()
+                sys.exit(1)
         else:
-            print(f"verify_token failed. Status code: {response.status_code}, Response: {response.text}")  # Replace with logging
-            RuntimeError(f"verify_token failed. Status code: {response.status_code}, Response: {response.text}")  # Replace with logging
+            logging.error(f"Error, unexpected verification response: {e}")
+            traceback.print_exc()
+            sys.exit(1)
 
     except requests.exceptions.RequestException as e:
-        print("verify_token:", e)  # Replace with logging
-        RuntimeError("verify_token:", e)  # Replace with logging
+        logging.error(f"Error during verification: {e}")
+        traceback.print_exc()
+        sys.exit(1)

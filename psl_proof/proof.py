@@ -50,7 +50,7 @@ class Proof:
             print(f"verify_result: {verify_result}")
             is_data_authentic = verify_result.is_valid
             proof_failed_reason = verify_result.error_text
-
+            
         cargo_data = CargoData(
             source_data = source_data,
             source_id = source_user_hash_64
@@ -82,6 +82,7 @@ class Proof:
                 'chat_data': None
             }
             self.proof_response.metadata = metadata
+            logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
             return self.proof_response
 
         #validate/proof data ...
@@ -97,20 +98,18 @@ class Proof:
             and self.proof_response.quality >= score_threshold
             and self.proof_response.uniqueness >= score_threshold
         )
-        total_score = (
-            self.proof_response.authenticity * 0.25
-            + self.proof_response.ownership * 0.25
-            + self.proof_response.quality * 0.25
-            + self.proof_response.uniqueness * 0.25
+        total_score = 0.0 if not self.proof_response.valid else (
+              self.proof_response.quality * 0.5
+            + self.proof_response.uniqueness * 0.5
         )
         self.proof_response.score = round(total_score, 2)
         self.proof_response.attributes = {
-            'proof_valid': is_data_authentic,
+            'score': self.proof_response.score,
             'did_score_content': True,
             'source': source_data.source.name,
             'revision': data_revision,
             'submitted_on': current_datetime,
-            'chat_data': cargo_data.get_chat_list_data()
+            'chat_data': None
         }
         self.proof_response.metadata = metadata
 
@@ -119,7 +118,7 @@ class Proof:
             self.config,
             source_data
         )
-        print(f"proof data: {self.proof_response}")
+        logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
         return self.proof_response
 
 def get_telegram_data(
@@ -188,7 +187,6 @@ def get_source_data(input_data: Dict[str, Any]) -> SourceData:
     )
 
     input_chats = input_data.get('chats', [])
-    #print(f"input_chats: {input_chats}")
     source_chats = source_data.source_chats
 
     for input_chat in input_chats:
