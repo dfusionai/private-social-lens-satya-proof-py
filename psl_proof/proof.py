@@ -50,7 +50,7 @@ class Proof:
             print(f"verify_result: {verify_result}")
             is_data_authentic = verify_result.is_valid
             proof_failed_reason = verify_result.error_text
-
+            
         cargo_data = CargoData(
             source_data = source_data,
             source_id = source_user_hash_64
@@ -82,6 +82,7 @@ class Proof:
                 'chat_data': None
             }
             self.proof_response.metadata = metadata
+            logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
             return self.proof_response
 
         #validate/proof data ...
@@ -103,11 +104,12 @@ class Proof:
         )
         self.proof_response.score = round(total_score, 2)
         self.proof_response.attributes = {
+            'score': self.proof_response.score,
             'did_score_content': True,
             'source': source_data.source.name,
             'revision': data_revision,
             'submitted_on': current_datetime,
-            'chat_data': cargo_data.get_chat_list_data()
+            'chat_data': None
         }
         self.proof_response.metadata = metadata
 
@@ -116,7 +118,7 @@ class Proof:
             self.config,
             source_data
         )
-        print(f"proof data: {self.proof_response}")
+        logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
         return self.proof_response
 
 def get_telegram_data(
