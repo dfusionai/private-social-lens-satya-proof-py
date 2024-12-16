@@ -45,8 +45,6 @@ def validate_data(
     source_data : SourceChatData = cargo_data.source_data
     source_chats = source_data.source_chats
 
-    #Patrick_ToCheck score_threshold should be 0.5
-    score_threshold = 0.5
     total_quality = 0.00
     total_uniqueness = 0.00
     chat_count = 0
@@ -87,19 +85,17 @@ def validate_data(
             total_uniqueness += uniqueness
 
             #print(f"source_contents: {source_contents}")
-            # if chat data has meaningful data...
-            if quality > score_threshold and uniqueness > score_threshold:
-                # Create a ChatData instance and add it to the list
-                chat_data = ChatData(
-                    chat_id=source_chat.chat_id,
-                    chat_length=contents_length
-                )
-                #print(f"chat_data: {chat_data}")
-                cargo_data.chat_list.append(
-                    chat_data
-                )
-            else:
-                print(f"Extract data skiped - values are below threshold({score_threshold})")
+            #RL: No longer generate data for sentiment & keywords
+            # Create a ChatData instance and add it to the list
+            #chat_data = ChatData(
+            #    chat_length=contents_length,
+            #    chat_start_on = source_chat.chat_start_on,
+            #    chat_ended_on = source_chat.chat_ended_on
+            #)
+            #print(f"chat_data: {chat_data}")
+            #cargo_data.chat_list.append(
+            #    chat_data
+            #)
 
     # Calculate uniqueness if there are chats
     if chat_count > 0:
