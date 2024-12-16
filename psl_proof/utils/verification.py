@@ -34,7 +34,7 @@ def verify_token(config: Dict[str, Any], source_data: SourceData) -> Optional[Ve
                 traceback.print_exc()
                 sys.exit(1)
         else:
-            logging.error(f"Error, unexpected verification response: {e}")
+            logging.error(f"Error, unexpected verification response: Status code: {response.status_code}, Response: {response.text}")
             traceback.print_exc()
             sys.exit(1)
 

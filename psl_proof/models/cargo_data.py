@@ -183,16 +183,17 @@ class SourceData:
 # ChatData for Source (final destination data structure)
 @dataclass
 class ChatData:
-    chat_id: int
     chat_length: int
-
+    chat_start_on: datetime = None
+    chat_ended_on: datetime = None
     sentiment: Dict[str, Any] = field(default_factory=dict)
     keywords: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self):
         return {
-            "chat_id": self.chat_id,
             "chat_length": self.chat_length,
+            "chat_start_on": self.chat_start_on.isoformat(),
+            "chat_ended_on": self.chat_ended_on.isoformat(),
             "sentiment": self.sentiment,   # No need to call .to_dict() for dicts
             "keywords": self.keywords,     # Same for other dict fields
         }
@@ -202,14 +203,14 @@ class ChatData:
 class CargoData:
     source_data: SourceData
     source_id: str
-    chat_list: List[ChatData] = field(default_factory=list)
+    # chat_list: List[ChatData] = field(default_factory=list)
 
     def to_dict(self):
         # Return a dictionary representation of the CargoData object
         return {
             "source_data": self.source_data,  # Assuming source_data can be serialized directly
-            "source_id": self.source_id,
-            "chat_list": [chat.to_dict() for chat in self.chat_list]  # Convert each ChatData in the list to a dict
+            "source_id": self.source_id #,
+            #"chat_list": [chat.to_dict() for chat in self.chat_list]  # Convert each ChatData in the list to a dict
         }
 
     @staticmethod
