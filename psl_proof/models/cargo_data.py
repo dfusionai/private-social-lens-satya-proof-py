@@ -177,7 +177,9 @@ class SourceData:
         return {
             "VerificationType": 0, # VerificationToken.
             "Token": self.submission_token,
-            "Reference": self.submission_id
+            "Reference": self.submission_id,
+            "SubmittedBy": self.submission_by,
+            "SubmittedOn": self.submission_date.isoformat(),
         }
 
 # ChatData for Source (final destination data structure)
