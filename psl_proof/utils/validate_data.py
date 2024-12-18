@@ -2,6 +2,47 @@ from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, Sou
 from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
+import math
+
+def get_quality_score(
+    source_chat: SourceChatData
+) -> float:
+    #timeliness_value
+    timeliness_value = 0
+    if source_chat.total_content_length > 0:
+        # tav = (𝛴 litsi) / (𝛴 li)
+        time_avg = float(source_chat.total_content_value) / float(source_chat.total_content_length)
+        # a = ln(2) / thl
+        half_life = 600.0  # 600 minutes
+        time_decay = math.log(2) / half_life
+        # t = exp(-atav)
+        timeliness_value = math.exp(- time_decay * time_avg)  # range 0 to 1
+
+    #thoughtfulness_of_conversation
+    thoughtfulness_of_conversation = 0.0
+    n = len(source_chat.participants)  # n: number of participants
+    if n > 1:
+        u = 3.0  # 𝜇: optimal number of participants
+        d = 5.0  # 𝜎: standard deviation of the curve
+
+        # Formula: p = exp(-(n-𝜇) / (2𝜎^2))
+        thoughtfulness_of_conversation = math.exp(-(n - u) / (2 * d ** 2))  # range 0 to 1
+
+    #contextualness_of_conversation
+    c = source_chat.total_content_length #total token length, c, of the text data
+    m = 2.0 #midpoint
+    k = 1.0 #key parameters.
+    # l=1/(1+exp(-k(c-c0)))
+    contextualness_of_conversation = 1.0/(1.0 + math.exp(-k*(c-m)))
+
+    #quality_score
+    a = 1 # factor
+    b = 1 # factor
+    c = 1 # factor
+    t = timeliness_value
+    p = thoughtfulness_of_conversation
+    l = contextualness_of_conversation
+    return round((a*t + b*t + c*l)/(a+b+c),2)
 
 
 def get_uniqueness_score(
@@ -65,7 +106,10 @@ def validate_data(
 
             chat_id = source_chat.chat_id
 
-            quality = source_chat.quality_score()
+            #quality = source_chat.quality_score()
+            quality = get_quality_score(
+              source_chat
+            )
             print(f"Chat({chat_id}) - quality: {quality}")
 
             total_quality += quality
