@@ -1,7 +1,7 @@
 from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
-from psl_proof.utils.submission import get_historical_chats, ChatHistory, SubmissionChat
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
 
 
 def get_uniqueness_score(
@@ -49,13 +49,6 @@ def validate_data(
     total_uniqueness = 0.00
     chat_count = 0
 
-    #Validate source data via valiator.api & obtain unquiness
-    chat_histories = get_historical_chats(
-        config,
-        source_data
-    )
-    #print(f"chat_histories: {chat_histories}")
-
     # Loop through the chat_data_list
     for source_chat in source_chats:
 
@@ -79,7 +72,7 @@ def validate_data(
 
             uniqueness = get_uniqueness_score(
               source_chat,
-              chat_histories
+              cargo_data.chat_histories
             )
             print(f"Chat({chat_id}) - uniqueness: {uniqueness}")
             total_uniqueness += uniqueness

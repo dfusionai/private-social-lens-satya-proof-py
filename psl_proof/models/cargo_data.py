@@ -7,6 +7,8 @@ from typing import Union
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from psl_proof.models.submission_dtos import SubmissionChat
+
 # Enum for DataSource
 class DataSource(Enum):
     telegram = 0
@@ -165,7 +167,7 @@ class SourceData:
         json = {
             "DataSource": self.source.value,  # Use .name to convert enum to string
             "SourceId": self.submission_id,
-            "SubmissionToken": self.submission_token,
+            "ProofToken": self.proof_token,
             "SubmittedBy": self.submission_by,
             "SubmittedOn": self.submission_date.isoformat(),
             "Chats": [source_chat.to_submission_json() for source_chat in self.source_chats]
@@ -205,6 +207,7 @@ class ChatData:
 class CargoData:
     source_data: SourceData
     source_id: str
+    chat_list: List[SubmissionChat] = field(default_factory=list)
     # chat_list: List[ChatData] = field(default_factory=list)
 
     def to_dict(self):

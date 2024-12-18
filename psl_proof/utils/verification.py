@@ -4,12 +4,7 @@ import logging
 from dataclasses import dataclass
 from psl_proof.models.cargo_data import SourceData
 from psl_proof.utils.validation_api import get_validation_api_url
-
-
-@dataclass
-class VerifyTokenResult:
-    is_valid: bool
-    error_text: str
+from psl_proof.models.verification_dtos import VerifyTokenResult
 
 
 def verify_token(config: Dict[str, Any], source_data: SourceData) -> Optional[VerifyTokenResult]:
@@ -23,10 +18,11 @@ def verify_token(config: Dict[str, Any], source_data: SourceData) -> Optional[Ve
         if response.status_code == 200:
             try:
                 result_json = response.json()
-
+                #print(f"verify_token result_json: {result_json}")
                 result = VerifyTokenResult(
                     is_valid=result_json.get("isValid", False),
                     error_text=result_json.get("errorText", ""),
+                    proof_token=result_json.get("proofToken", "")
                 )
                 return result
             except ValueError as e:

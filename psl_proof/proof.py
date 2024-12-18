@@ -11,6 +11,8 @@ from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, D
 from psl_proof.utils.validate_data import validate_data
 from psl_proof.utils.submission import submit_data
 from psl_proof.utils.verification import verify_token, VerifyTokenResult
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat
+from psl_proof.utils.submission import get_submisssion_historical_data
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
@@ -47,14 +49,26 @@ class Proof:
         )
         is_data_authentic = verify_result
         if is_data_authentic:
-            print(f"verify_result: {verify_result}")
+            #print(f"verify_result: {verify_result}")
             is_data_authentic = verify_result.is_valid
             proof_failed_reason = verify_result.error_text
+            source_data.proof_token = verify_result.proof_token
 
         cargo_data = CargoData(
             source_data = source_data,
             source_id = source_user_hash_64
         )
+
+        if is_data_authentic:
+            #Validate source data via valiator.api & obtain unquiness
+            submission_history_data : SubmissionHistory = get_submisssion_historical_data(
+                self.config,
+                source_data
+            )
+            print(f"submission_history_data: {submission_history_data}")
+            is_data_authentic = verify_result.is_valid
+            proof_failed_reason = verify_result.error_text
+            cargo_data.chat_histories = submission_history_data.chat_histories
 
         metadata = MetaData(
           source_id = source_user_hash_64,
