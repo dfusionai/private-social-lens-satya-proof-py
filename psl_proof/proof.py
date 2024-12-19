@@ -11,6 +11,8 @@ from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, D
 from psl_proof.utils.validate_data import validate_data
 from psl_proof.utils.submission import submit_data
 from psl_proof.utils.verification import verify_token, VerifyTokenResult
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat
+from psl_proof.utils.submission import get_submisssion_historical_data
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
@@ -47,14 +49,25 @@ class Proof:
         )
         is_data_authentic = verify_result
         if is_data_authentic:
-            print(f"verify_result: {verify_result}")
+            #print(f"verify_result: {verify_result}")
             is_data_authentic = verify_result.is_valid
             proof_failed_reason = verify_result.error_text
+            source_data.proof_token = verify_result.proof_token
 
         cargo_data = CargoData(
             source_data = source_data,
             source_id = source_user_hash_64
         )
+
+        if is_data_authentic:
+            #Validate source data via valiator.api & obtain unquiness
+            submission_history_data : SubmissionHistory = get_submisssion_historical_data(
+                self.config,
+                source_data
+            )
+            is_data_authentic = submission_history_data.is_valid
+            proof_failed_reason = submission_history_data.error_text
+            cargo_data.chat_histories = submission_history_data.chat_histories
 
         metadata = MetaData(
           source_id = source_user_hash_64,
@@ -68,10 +81,7 @@ class Proof:
         current_datetime = datetime.now().isoformat()
         if not is_data_authentic: #short circuit so we don't waste analysis
             print(f"Validation proof failed: {proof_failed_reason}")
-            self.proof_response.score = 0.0
-            self.proof_response.uniqueness = 0.0
-            self.proof_response.quality = 0.0
-            self.proof_response.valid = False
+            self.proof_response.set_proof_is_invalid()
             self.proof_response.attributes = {
                 'proof_valid': False,
                 'proof_failed_reason': proof_failed_reason,
@@ -102,6 +112,9 @@ class Proof:
             + self.proof_response.uniqueness * 0.5
         )
         self.proof_response.score = round(total_score, 2)
+
+
+
         self.proof_response.attributes = {
             'score': self.proof_response.score,
             'did_score_content': True,
@@ -113,10 +126,20 @@ class Proof:
         self.proof_response.metadata = metadata
 
         #Submit Source data to server
-        submit_data(
+        submit_data_result = submit_data(
             self.config,
             source_data
         )
+        if submit_data_result and not submit_data_result.is_valid :
+            logging.info(f"submit data failed: {submit_data_result.error_text}")
+            self.proof_response.set_proof_is_invalid()
+            self.proof_response.attributes.pop('score', None)
+            self.proof_response.attributes.pop('did_score_content', None)
+            self.proof_response.attributes.update({
+                'proof_valid': False,
+                'proof_failed_reason': submit_data_result.error_text
+            })
+
         logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
         return self.proof_response
 
