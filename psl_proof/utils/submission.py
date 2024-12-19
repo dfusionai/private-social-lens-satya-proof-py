@@ -2,13 +2,14 @@ from typing import Optional, List, Dict, Any
 import requests
 import json
 import logging
-
+import traceback
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 
 from psl_proof.models.cargo_data import SourceData, DataSource
 from psl_proof.utils.validation_api import get_validation_api_url
-from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory, SubmitDataResponse
 
 def get_submisssion_historical_data(
         config: Dict[str, Any],
@@ -27,7 +28,7 @@ def get_submisssion_historical_data(
         if response.status_code == 200:
             try:
                 result_json = response.json()
-                print(f"get submission historical data - result_json: {result_json}")
+                #print(f"get submission historical data - result_json: {result_json}")
 
                 # Map JSON response to ChatHistory objects
                 chat_histories = []
@@ -61,7 +62,7 @@ def get_submisssion_historical_data(
                 traceback.print_exc()
                 sys.exit(1)
         else:
-            logging.error(f"Validation failed. Status code: {response.status_code}, Response: {response.text}")
+            logging.error(f"GetSubmissionHistoricalData failed. Status code: {response.status_code}, Response: {response.text}")
             traceback.print_exc()
             sys.exit(1)
     except requests.exceptions.RequestException as e:
@@ -74,7 +75,7 @@ def get_submisssion_historical_data(
 def submit_data(
     config: Dict[str, Any],
     source_data: SourceData
-):
+) -> SubmitDataResponse :
     try:
         url = get_validation_api_url(
             config,
@@ -85,11 +86,17 @@ def submit_data(
 
         response = requests.post(url, json=payload, headers=headers)
 
-        if response.status_code != 200:
-            logging.error(f"Submission failed. Status code: {response.status_code}, Response: {response.text}")
+        if response.status_code == 200:
+            result_json = response.json()
+            #print(f"submit data - result_json: {result_json}")
+            return SubmitDataResponse(
+                is_valid=result_json.get("isValid", False),
+                error_text=result_json.get("errorText", "")
+            )
+        else :
+            logging.error(f"Submit data failed. Status code: {response.status_code}, Response: {response.text}")
             traceback.print_exc()
             sys.exit(1)
-
 
     except requests.exceptions.RequestException as e:
         logging.error("submit_data:", e)

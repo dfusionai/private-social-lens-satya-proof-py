@@ -26,3 +26,8 @@ class SubmissionHistory:
     is_valid: bool
     error_text: str
     chat_histories: List[ChatHistory] = field(default_factory=list)
+
+@dataclass
+class SubmitDataResponse:
+    is_valid: bool
+    error_text: str

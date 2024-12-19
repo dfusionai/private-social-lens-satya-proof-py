@@ -19,8 +19,8 @@ def load_config() -> Dict[str, Any]:
         'dlp_id': 4,
         'input_dir': INPUT_DIR,
         'salt': '5EkntCWI',
-        #'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
-        'validator_base_api_url': 'https://07c8-169-0-170-105.ngrok-free.app'
+        'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
+        #'validator_base_api_url': 'https://cdeb-169-0-171-145.ngrok-free.app'
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
     return config
@@ -40,7 +40,8 @@ def run() -> None:
 
     output_path = os.path.join(OUTPUT_DIR, "results.json")
     with open(output_path, 'w') as f:
-        json.dump(proof_response.dict(), f, indent=2)
+        #json.dump(proof_response.dict(), f, indent=2)
+        json.dump(proof_response.model_dump(), f, indent=2)
     #logging.info(f"Proof generation complete: {proof_response}")
 
 

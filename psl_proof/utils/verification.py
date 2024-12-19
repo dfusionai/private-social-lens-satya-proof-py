@@ -1,6 +1,8 @@
 from typing import Optional, Dict, Any
 import requests
 import logging
+import traceback
+import sys 
 from dataclasses import dataclass
 from psl_proof.models.cargo_data import SourceData
 from psl_proof.utils.validation_api import get_validation_api_url
