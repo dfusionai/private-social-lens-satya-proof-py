@@ -79,7 +79,7 @@ class Proof:
         submission_time_elapsed = cargo_data.submission_time_elapsed()
         if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cool_down_period:
             is_data_authentic = False
-            proof_failed_reason = f"Submission is not permitted as the last submission was made within the past {cool_down_period} hours"
+            proof_failed_reason = f"Last submission was made within the past {cool_down_period} hours"
 
         metadata = MetaData(
           source_id = source_user_hash_64,
@@ -170,7 +170,7 @@ def get_telegram_data(
             message_date = datetime.utcfromtimestamp(date_value)  # Convert Unix timestamp to datetime
             message_date = message_date.astimezone(timezone.utc)
 
-        print(f"message_date: {message_date}")
+        #print(f"message_date: {message_date}")
 
         # Extract the message content
         message = input_content.get('content', {})

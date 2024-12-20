@@ -52,9 +52,9 @@ def get_submisssion_historical_data(
                     )
                     chat_histories.append(chat_history)
 
-                #Convert last submission 
+                #Convert last submission
                 last_submission_val = result_json.get("lastSubmission", None)
-                print(f"last_submission_val: {last_submission_val}")
+                #print(f"last_submission_val: {last_submission_val}")
                 try:
                     last_submission = (
                         datetime.fromisoformat(last_submission_val)

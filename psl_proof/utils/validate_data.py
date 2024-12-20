@@ -72,8 +72,13 @@ def get_uniqueness_score(
 
                 time_in_seconds = (chat_ended_on - historical_chat_ended_on).total_seconds()
                 time_in_hours = int(time_in_seconds // 3600)
-                if time_in_hours < 12: # within 12 Hours..
+                if time_in_hours <= 12: # within 24 Hours..
                     return 0.0
+
+                #if time_in_hours <= 24: # within 24 Hours..
+                #    print(f"time_in_hours:{time_in_hours}")
+                #    time_decay = math.log(2) / 12   #half_life: 12hrs, more recent less scores...
+                #    return math.exp(-time_decay * (24 - time_in_hours))
 
     # If no matching source_chat_id is found, return 1
     return 1.0
@@ -140,11 +145,13 @@ def validate_data(
         print(f"proof_data.quality: {proof_data.quality}")
 
         uniqueness = round(total_uniqueness / chat_count, 2)
-        #time_elapsed = cargo_data.submission_time_elapsed()
-        #print(f"time_elapsed: {time_elapsed}")
-        #if time_elapsed > 0 :
-        #    half_life = 24  # 2 hours
-        #    time_decay = math.log(2) / half_life
-        #    uniqueness *= math.exp(-time_decay * time_elapsed)
+
+        #instead rejected, alternatively give lower score with submit to frequently...
+        #time_lapse = cargo_data.submission_time_elapsed()
+        #if time_lapse <= 24: # within 24 Hours..
+        #    print(f"time_in_hours:{time_lapse}")
+        #    time_decay = math.log(2) / 12   #half_life: 12hrs, more recent less scores...
+        #    uniqueness *= math.exp(-time_decay * (24 - time_lapse))
+
         proof_data.uniqueness = uniqueness
         print(f"proof_data.uniqueness: {proof_data.uniqueness}")
