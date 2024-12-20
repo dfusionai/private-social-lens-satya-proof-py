@@ -139,5 +139,12 @@ def validate_data(
         proof_data.quality = round(total_quality / chat_count, 2)
         print(f"proof_data.quality: {proof_data.quality}")
 
-        proof_data.uniqueness = round(total_uniqueness / chat_count, 2)
+        uniqueness = round(total_uniqueness / chat_count, 2)
+        #time_elapsed = cargo_data.submission_time_elapsed()
+        #print(f"time_elapsed: {time_elapsed}")
+        #if time_elapsed > 0 :
+        #    half_life = 24  # 2 hours
+        #    time_decay = math.log(2) / half_life
+        #    uniqueness *= math.exp(-time_decay * time_elapsed)
+        proof_data.uniqueness = uniqueness
         print(f"proof_data.uniqueness: {proof_data.uniqueness}")

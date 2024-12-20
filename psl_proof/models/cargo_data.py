@@ -5,7 +5,7 @@ import math
 from typing import Union
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 
 from psl_proof.models.submission_dtos import SubmissionChat
 
@@ -45,8 +45,8 @@ class SourceChatData:
 
             # Calculate the difference in minutes
             # Convert current_timestamp to datetime if it's a Unix timestamp
-            if isinstance(submission_timestamp, int):
-                submission_timestamp = datetime.utcfromtimestamp(submission_timestamp)
+            #if isinstance(submission_timestamp, int):
+            #    submission_timestamp = datetime.utcfromtimestamp(submission_timestamp)
             time_in_seconds = (submission_timestamp - chat_timestamp).total_seconds()
             time_in_minutes = int(time_in_seconds // 60)
 
@@ -139,11 +139,10 @@ class SourceData:
 
     def to_verification_json(self) -> dict:
         return {
-            "VerificationType": 0, # VerificationToken.
             "Token": self.submission_token,
-            "Reference": self.submission_id,
-            "SubmittedBy": self.submission_by,
-            "SubmittedOn": self.submission_date.isoformat(),
+            "Reference": self.submission_id #,
+            #"SubmittedBy": self.submission_by,
+            #"SubmittedOn": self.submission_date.isoformat(),
         }
 
 # ChatData for Source (final destination data structure)
@@ -169,8 +168,17 @@ class ChatData:
 class CargoData:
     source_data: SourceData
     source_id: str
+    current_timestamp: datetime = None
+    last_submission: datetime = None
     chat_list: List[SubmissionChat] = field(default_factory=list)
     # chat_list: List[ChatData] = field(default_factory=list)
+
+    def submission_time_elapsed(self) -> float :
+        if not self.last_submission:
+            return 0.0
+        time_in_seconds = (self.current_timestamp - self.last_submission).total_seconds()
+        time_in_hours = int(time_in_seconds // 3600)
+        return time_in_hours
 
     def to_dict(self):
         # Return a dictionary representation of the CargoData object

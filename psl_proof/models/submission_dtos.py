@@ -25,6 +25,7 @@ class SubmitDataResult:
 class SubmissionHistory:
     is_valid: bool
     error_text: str
+    last_submission: datetime 
     chat_histories: List[ChatHistory] = field(default_factory=list)
 
 @dataclass
