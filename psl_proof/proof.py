@@ -91,17 +91,18 @@ class Proof:
             self.proof_response
         )
 
+        #Might need to increase the rate factor for Quality
+        total_score = (self.proof_response.quality * 0.5
+            + self.proof_response.uniqueness * 0.5)
+        total_score = round(total_score, 2)
+
         score_threshold = 0.5 #UPDATE after testing some conversations
-        self.proof_response.valid = (
-            is_data_authentic
-            and self.proof_response.quality >= score_threshold
-            and self.proof_response.uniqueness >= score_threshold
-        )
-        total_score = 0.0 if not self.proof_response.valid else (
-              self.proof_response.quality * 0.5
-            + self.proof_response.uniqueness * 0.5
-        )
-        self.proof_response.score = round(total_score, 2)
+        self.proof_response.valid = total_score > score_threshold
+        self.proof_response.score = 0.0
+        if self.proof_response.valid:
+           self.proof_response.score = total_score
+        print(f"proof score: {self.proof_response.score }")
+
         self.proof_response.attributes = {
             'score': self.proof_response.score,
             'did_score_content': True,
