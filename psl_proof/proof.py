@@ -98,7 +98,8 @@ class Proof:
                 'did_score_content': False,
                 'source': source_data.source.name,
                 'revision': data_revision,
-                'submitted_on': current_timestamp.isoformat()
+                'submitted_on': current_timestamp.isoformat(),
+                'chat_data': None
             }
             self.proof_response.metadata = metadata
             logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
@@ -128,8 +129,8 @@ class Proof:
             'did_score_content': True,
             'source': source_data.source.name,
             'revision': data_revision,
-            'submitted_on': current_timestamp.isoformat()
-            #'chat_data': None #RL: No longer generate usesful data...
+            'submitted_on': current_timestamp.isoformat(),
+            'chat_data': cargo_data.get_chat_list_data()
         }
         self.proof_response.metadata = metadata
 
@@ -143,6 +144,7 @@ class Proof:
             self.proof_response.set_proof_is_invalid()
             self.proof_response.attributes.pop('score', None)
             self.proof_response.attributes.pop('did_score_content', None)
+            self.proof_response.attributes.pop('chat_data', None)
             self.proof_response.attributes.update({
                 'proof_valid': False,
                 'proof_failed_reason': submit_data_result.error_text
