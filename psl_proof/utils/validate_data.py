@@ -59,8 +59,9 @@ def get_uniqueness_score(
     # Loop through chat_histories to find a match by source_chat_id
     for history in chat_histories:
         if history.source_chat_id == source_chat.chat_id_as_key():
-            # Loop through chat_list to find a match by chat_ended_On date
+            # Loop through chat_list: should be only one the most recent record
             for historical_chat in history.chat_list:
+
                 historical_chat_ended_on = historical_chat.chat_ended_on
 
                 if historical_chat_ended_on.tzinfo is not None:
@@ -70,15 +71,14 @@ def get_uniqueness_score(
                 if chat_ended_on.tzinfo is not None:
                     chat_ended_on = chat_ended_on.replace(tzinfo=None)
 
+                # based on datetime of last entry of conversation/chat
+                # determin time different between last submission and current submission
                 time_in_seconds = (chat_ended_on - historical_chat_ended_on).total_seconds()
                 time_in_hours = int(time_in_seconds // 3600)
-                if time_in_hours <= 12: # within 24 Hours..
+                # within 12 hours
+                if time_in_hours <= 12:
                     return 0.0
-
-                #if time_in_hours <= 24: # within 24 Hours..
-                #    print(f"time_in_hours:{time_in_hours}")
-                #    time_decay = math.log(2) / 12   #half_life: 12hrs, more recent less scores...
-                #    return math.exp(-time_decay * (24 - time_in_hours))
+                return 1.0 // unique
 
     # If no matching source_chat_id is found, return 1
     return 1.0
@@ -145,13 +145,5 @@ def validate_data(
         print(f"proof_data.quality: {proof_data.quality}")
 
         uniqueness = round(total_uniqueness / chat_count, 2)
-
-        #instead rejected, alternatively give lower score with submit to frequently...
-        #time_lapse = cargo_data.submission_time_elapsed()
-        #if time_lapse <= 24: # within 24 Hours..
-        #    print(f"time_in_hours:{time_lapse}")
-        #    time_decay = math.log(2) / 12   #half_life: 12hrs, more recent less scores...
-        #    uniqueness *= math.exp(-time_decay * (24 - time_lapse))
-
         proof_data.uniqueness = uniqueness
         print(f"proof_data.uniqueness: {proof_data.uniqueness}")
