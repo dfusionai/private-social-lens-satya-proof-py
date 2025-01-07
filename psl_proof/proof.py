@@ -75,7 +75,7 @@ class Proof:
             cargo_data.chat_histories = submission_history_data.chat_histories
             cargo_data.last_submission = submission_history_data.last_submission
 
-        cool_down_period = 12
+        cool_down_period = 12 # hours
         submission_time_elapsed = cargo_data.submission_time_elapsed()
         if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cool_down_period:
             is_data_authentic = False
