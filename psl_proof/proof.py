@@ -11,8 +11,8 @@ from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, D
 from psl_proof.utils.validate_data import validate_data
 from psl_proof.utils.submission import submit_data
 from psl_proof.utils.verification import verify_token, VerifyTokenResult
-from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat
-from psl_proof.utils.submission import get_submisssion_historical_data
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory
+from psl_proof.utils.submission import get_submission_historical_data
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
@@ -65,8 +65,8 @@ class Proof:
 
 
         if is_data_authentic:
-            #Validate source data via valiator.api & obtain unquiness
-            submission_history_data : SubmissionHistory = get_submisssion_historical_data(
+            #Validate source data via validator.api & obtain uniqueness
+            submission_history_data : SubmissionHistory = get_submission_historical_data(
                 self.config,
                 source_data
             )
@@ -111,17 +111,17 @@ class Proof:
             self.proof_response
         )
 
+        #Might need to increase the rate factor for Quality
+        total_score = (self.proof_response.quality * 0.5
+            + self.proof_response.uniqueness * 0.5)
+        total_score = round(total_score, 2)
+
         score_threshold = 0.5 #UPDATE after testing some conversations
-        self.proof_response.valid = (
-            is_data_authentic
-            and self.proof_response.quality >= score_threshold
-            and self.proof_response.uniqueness >= score_threshold
-        )
-        total_score = 0.0 if not self.proof_response.valid else (
-              self.proof_response.quality * 0.5
-            + self.proof_response.uniqueness * 0.5
-        )
-        self.proof_response.score = round(total_score, 2)
+        self.proof_response.valid = total_score > score_threshold
+        self.proof_response.score = 0.0
+        if self.proof_response.valid:
+           self.proof_response.score = total_score
+        print(f"proof score: {self.proof_response.score }")
 
         self.proof_response.attributes = {
             'score': self.proof_response.score,
@@ -129,7 +129,7 @@ class Proof:
             'source': source_data.source.name,
             'revision': data_revision,
             'submitted_on': current_timestamp.isoformat()
-            #'chat_data': None #RL: No longer generate usesful data...
+            #'chat_data': None #RL: No longer generate useful data...
         }
         self.proof_response.metadata = metadata
 

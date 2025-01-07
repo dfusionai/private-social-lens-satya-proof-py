@@ -7,7 +7,6 @@ import zipfile
 from typing import Dict, Any
 
 from psl_proof.proof import Proof
-
 INPUT_DIR, OUTPUT_DIR = '/input', '/output'
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')

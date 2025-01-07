@@ -11,7 +11,7 @@ from psl_proof.models.cargo_data import SourceData, DataSource
 from psl_proof.utils.validation_api import get_validation_api_url
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory, SubmitDataResponse
 
-def get_submisssion_historical_data(
+def get_submission_historical_data(
         config: Dict[str, Any],
         source_data: SourceData
     ) -> Optional[SubmissionHistory]:
