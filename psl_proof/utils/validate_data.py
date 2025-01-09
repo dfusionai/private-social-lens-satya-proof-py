@@ -77,7 +77,7 @@ def get_uniqueness_score(
                 time_in_hours = int(time_in_seconds // 3600)
                 if time_in_hours <= 1 : # within 1 hours
                     return 0.0
-                return 1.0 // unique
+                return 1.0 # unique
 
     # If no matching source_chat_id is found, return 1
     return 1.0
