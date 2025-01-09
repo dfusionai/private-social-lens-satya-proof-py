@@ -62,8 +62,6 @@ class Proof:
             current_timestamp = current_timestamp
         )
 
-
-
         if is_data_authentic:
             #Validate source data via validator.api & obtain uniqueness
             submission_history_data : SubmissionHistory = get_submission_historical_data(
@@ -116,7 +114,7 @@ class Proof:
             + self.proof_response.uniqueness * 0.5)
         total_score = round(total_score, 2)
 
-        score_threshold = 0.5 #UPDATE after testing some conversations
+        score_threshold = 0.25 # lower scores
         self.proof_response.valid = total_score > score_threshold
         self.proof_response.score = 0.0
         if self.proof_response.valid:

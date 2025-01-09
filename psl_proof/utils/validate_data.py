@@ -75,8 +75,7 @@ def get_uniqueness_score(
                 # determin time different between last submission and current submission
                 time_in_seconds = (chat_ended_on - historical_chat_ended_on).total_seconds()
                 time_in_hours = int(time_in_seconds // 3600)
-                # within 12 hours
-                if time_in_hours <= 12:
+                if time_in_hours <= 2 : # within 2 hours
                     return 0.0
                 return 1.0 // unique
 
