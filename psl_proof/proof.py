@@ -114,7 +114,7 @@ class Proof:
             + self.proof_response.uniqueness * 0.5)
         total_score = round(total_score, 2)
 
-        score_threshold = 0.25 # lower scores
+        score_threshold = 0.1 # threshold scores
         self.proof_response.valid = total_score > score_threshold
         self.proof_response.score = 0.0
         if self.proof_response.valid:
