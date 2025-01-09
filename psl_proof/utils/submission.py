@@ -1,35 +1,24 @@
 from typing import Optional, List, Dict, Any
 import requests
 import json
+import logging
+import traceback
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 
 from psl_proof.models.cargo_data import SourceData, DataSource
 from psl_proof.utils.validation_api import get_validation_api_url
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory, SubmitDataResponse
 
-
-@dataclass
-class SubmissionChat:
-    participant_count: int
-    chat_count: int
-    chat_length: int
-    chat_start_on: datetime
-    chat_ended_on: datetime
-
-@dataclass
-class ChatHistory:
-    source_chat_id : str
-    chat_list: List[SubmissionChat] = field(default_factory=list)
-
-
-def get_historical_chats(
+def get_submission_historical_data(
         config: Dict[str, Any],
         source_data: SourceData
-    ) -> Optional[List[ChatHistory]]:
+    ) -> Optional[SubmissionHistory]:
     try:
         url = get_validation_api_url(
             config,
-            "api/submissions/historical-chats"
+            "api/submissions/historical-data"
         )
         headers = {"Content-Type": "application/json"}
         payload = source_data.to_submission_json()
@@ -38,10 +27,12 @@ def get_historical_chats(
 
         if response.status_code == 200:
             try:
-                chat_histories_json = response.json()
+                result_json = response.json()
+                #print(f"get submission historical data - result_json: {result_json}")
 
                 # Map JSON response to ChatHistory objects
                 chat_histories = []
+                chat_histories_json = result_json.get("chatHistories", [])
                 for chat_history_data in chat_histories_json:
                     #print(f"chat_history_data:{chat_history_data}")
                     chat_list = [
@@ -56,18 +47,36 @@ def get_historical_chats(
                     ]
 
                     chat_history = ChatHistory(
-                        source_chat_id=chat_history_data.get("sourceChatId", ""),
+                        source_chat_id = chat_history_data.get("sourceChatId", 0),
                         chat_list=chat_list
                     )
                     chat_histories.append(chat_history)
 
-                return chat_histories
+                #Convert last submission
+                last_submission_val = result_json.get("lastSubmission", None)
+                #print(f"last_submission_val: {last_submission_val}")
+                try:
+                    last_submission = (
+                        datetime.fromisoformat(last_submission_val)
+                        if last_submission_val
+                        else None
+                    )
+                except ValueError:
+                    print(f"Invalid date format for last_submission_val: {last_submission_val}")
+                    last_submission = None
+
+                return SubmissionHistory(
+                    is_valid=result_json.get("isValid", False),
+                    error_text=result_json.get("errorText", ""),
+                    last_submission= last_submission,
+                    chat_histories = chat_histories
+                )
             except ValueError as e:
                 logging.error(f"Error during parsing Get_historical_chats status: {e}")
                 traceback.print_exc()
                 sys.exit(1)
         else:
-            logging.error(f"Validation failed. Status code: {response.status_code}, Response: {response.text}")
+            logging.error(f"GetSubmissionHistoricalData failed. Status code: {response.status_code}, Response: {response.text}")
             traceback.print_exc()
             sys.exit(1)
     except requests.exceptions.RequestException as e:
@@ -80,7 +89,7 @@ def get_historical_chats(
 def submit_data(
     config: Dict[str, Any],
     source_data: SourceData
-):
+) -> SubmitDataResponse :
     try:
         url = get_validation_api_url(
             config,
@@ -91,11 +100,17 @@ def submit_data(
 
         response = requests.post(url, json=payload, headers=headers)
 
-        if response.status_code != 200:
-            logging.error(f"Submission failed. Status code: {response.status_code}, Response: {response.text}")
+        if response.status_code == 200:
+            result_json = response.json()
+            #print(f"submit data - result_json: {result_json}")
+            return SubmitDataResponse(
+                is_valid=result_json.get("isValid", False),
+                error_text=result_json.get("errorText", "")
+            )
+        else :
+            logging.error(f"Submit data failed. Status code: {response.status_code}, Response: {response.text}")
             traceback.print_exc()
             sys.exit(1)
-
 
     except requests.exceptions.RequestException as e:
         logging.error("submit_data:", e)

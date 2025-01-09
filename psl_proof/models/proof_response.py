@@ -30,3 +30,11 @@ class ProofResponse(BaseModel):
     uniqueness: float = 0.0
     attributes: Optional[Dict[str, Any]] = {}
     metadata: Optional[Dict[str, Any]] = {}
+
+    def set_proof_is_invalid(self) :
+        self.valid = False
+        self.score = 0.0
+        self.authenticity = 0.0
+        self.ownership = 0.0
+        self.quality = 0.0
+        self.uniqueness = 0.0

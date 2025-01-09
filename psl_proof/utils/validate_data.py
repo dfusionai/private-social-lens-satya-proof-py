@@ -1,7 +1,48 @@
 from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
-from psl_proof.utils.submission import get_historical_chats, ChatHistory, SubmissionChat
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
+import math
+
+def get_quality_score(
+    source_chat: SourceChatData
+) -> float:
+    #timeliness_value
+    timeliness_value = 0
+    if source_chat.total_content_length > 0:
+        # tav = (𝛴 litsi) / (𝛴 li)
+        time_avg = float(source_chat.total_content_value) / float(source_chat.total_content_length)
+        # a = ln(2) / thl
+        half_life = 600.0  # 600 minutes
+        time_decay = math.log(2) / half_life
+        # t = exp(-atav)
+        timeliness_value = math.exp(- time_decay * time_avg)  # range 0 to 1
+
+    #thoughtfulness_of_conversation
+    thoughtfulness_of_conversation = 0.0
+    n = len(source_chat.participants)  # n: number of participants
+    if n > 1:
+        u = 3.0  # 𝜇: optimal number of participants
+        d = 5.0  # 𝜎: standard deviation of the curve
+
+        # Formula: p = exp(-(n-𝜇) / (2𝜎^2))
+        thoughtfulness_of_conversation = math.exp(-(n - u) / (2 * d ** 2))  # range 0 to 1
+
+    #contextualness_of_conversation
+    c = source_chat.total_content_length #total token length, c, of the text data
+    m = 2.0 #midpoint
+    k = 1.0 #key parameters.
+    # l=1/(1+exp(-k(c-c0)))
+    contextualness_of_conversation = 1.0/(1.0 + math.exp(-k*(c-m)))
+
+    #quality_score
+    a = 1 # factor
+    b = 1 # factor
+    c = 1 # factor
+    t = timeliness_value
+    p = thoughtfulness_of_conversation
+    l = contextualness_of_conversation
+    return round((a*t + b*t + c*l)/(a+b+c),2)
 
 
 def get_uniqueness_score(
@@ -18,8 +59,9 @@ def get_uniqueness_score(
     # Loop through chat_histories to find a match by source_chat_id
     for history in chat_histories:
         if history.source_chat_id == source_chat.chat_id_as_key():
-            # Loop through chat_list to find a match by chat_ended_On date
+            # Loop through chat_list: should be only one the most recent record
             for historical_chat in history.chat_list:
+
                 historical_chat_ended_on = historical_chat.chat_ended_on
 
                 if historical_chat_ended_on.tzinfo is not None:
@@ -29,10 +71,13 @@ def get_uniqueness_score(
                 if chat_ended_on.tzinfo is not None:
                     chat_ended_on = chat_ended_on.replace(tzinfo=None)
 
+                # based on datetime of last entry of conversation/chat
+                # determin time different between last submission and current submission
                 time_in_seconds = (chat_ended_on - historical_chat_ended_on).total_seconds()
                 time_in_hours = int(time_in_seconds // 3600)
-                if time_in_hours < 12: # within 12 Hours..
+                if time_in_hours <= 1 : # within 1 hours
                     return 0.0
+                return 1.0 // unique
 
     # If no matching source_chat_id is found, return 1
     return 1.0
@@ -48,13 +93,6 @@ def validate_data(
     total_quality = 0.00
     total_uniqueness = 0.00
     chat_count = 0
-
-    #Validate source data via valiator.api & obtain unquiness
-    chat_histories = get_historical_chats(
-        config,
-        source_data
-    )
-    #print(f"chat_histories: {chat_histories}")
 
     # Loop through the chat_data_list
     for source_chat in source_chats:
@@ -72,14 +110,17 @@ def validate_data(
 
             chat_id = source_chat.chat_id
 
-            quality = source_chat.quality_score()
+            #quality = source_chat.quality_score()
+            quality = get_quality_score(
+              source_chat
+            )
             print(f"Chat({chat_id}) - quality: {quality}")
 
             total_quality += quality
 
             uniqueness = get_uniqueness_score(
               source_chat,
-              chat_histories
+              cargo_data.chat_histories
             )
             print(f"Chat({chat_id}) - uniqueness: {uniqueness}")
             total_uniqueness += uniqueness
@@ -102,5 +143,6 @@ def validate_data(
         proof_data.quality = round(total_quality / chat_count, 2)
         print(f"proof_data.quality: {proof_data.quality}")
 
-        proof_data.uniqueness = round(total_uniqueness / chat_count, 2)
+        uniqueness = round(total_uniqueness / chat_count, 2)
+        proof_data.uniqueness = uniqueness
         print(f"proof_data.uniqueness: {proof_data.uniqueness}")

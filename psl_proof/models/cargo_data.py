@@ -5,7 +5,9 @@ import math
 from typing import Union
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
+
+from psl_proof.models.submission_dtos import SubmissionChat
 
 # Enum for DataSource
 class DataSource(Enum):
@@ -26,44 +28,6 @@ class SourceChatData:
     def chat_id_as_key(self) -> str :
         return str(self.chat_id)
 
-    def timeliness_value(self) -> float:
-        if self.total_content_length == 0:
-            return 0
-        # tav = (𝛴 litsi) / (𝛴 li)
-        time_avg = float(self.total_content_value) / float(self.total_content_length)
-        # a = ln(2) / thl
-        half_life = 600.0  # 600 minutes
-        time_decay = math.log(2) / half_life
-        # t = exp(-atav)
-        return math.exp(- time_decay * time_avg)  # range 0 to 1
-
-    def thoughtfulness_of_conversation(self) -> float:
-        n = len(self.participants)  # n: number of participants
-        if n == 1:
-            return 0.0
-        u = 3.0  # 𝜇: optimal number of participants
-        d = 5.0  # 𝜎: standard deviation of the curve
-
-        # Formula: p = exp(-(n-𝜇) / (2𝜎^2))
-        return math.exp(-(n - u) / (2 * d ** 2))  # range 0 to 1
-
-    def contextualness_of_conversation(self)  -> float:
-        c = self.total_content_length #total token length, c, of the text data
-        m = 2.0 #midpoint
-        k = 1.0 #key parameters.
-        # l=1/(1+exp(-k(c-c0)))
-        return 1.0/(1.0 + math.exp(-k*(c-m)))
-
-    def quality_score(self) -> float :
-        a = 1 # factor
-        b = 1 # factor
-        c = 1 # factor
-        t = self.timeliness_value()
-        p = self.thoughtfulness_of_conversation()
-        l = self.contextualness_of_conversation()
-        return round((a*t + b*t + c*l)/(a+b+c),2)
-
-
     def content_as_text(self) -> str:
         """Converts contents to a single string with each entry on a new line."""
         return "\r".join(self.contents)
@@ -81,8 +45,8 @@ class SourceChatData:
 
             # Calculate the difference in minutes
             # Convert current_timestamp to datetime if it's a Unix timestamp
-            if isinstance(submission_timestamp, int):
-                submission_timestamp = datetime.utcfromtimestamp(submission_timestamp)
+            #if isinstance(submission_timestamp, int):
+            #    submission_timestamp = datetime.utcfromtimestamp(submission_timestamp)
             time_in_seconds = (submission_timestamp - chat_timestamp).total_seconds()
             time_in_minutes = int(time_in_seconds // 60)
 
@@ -165,7 +129,7 @@ class SourceData:
         json = {
             "DataSource": self.source.value,  # Use .name to convert enum to string
             "SourceId": self.submission_id,
-            "SubmissionToken": self.submission_token,
+            "ProofToken": self.proof_token,
             "SubmittedBy": self.submission_by,
             "SubmittedOn": self.submission_date.isoformat(),
             "Chats": [source_chat.to_submission_json() for source_chat in self.source_chats]
@@ -175,11 +139,10 @@ class SourceData:
 
     def to_verification_json(self) -> dict:
         return {
-            "VerificationType": 0, # VerificationToken.
             "Token": self.submission_token,
-            "Reference": self.submission_id,
-            "SubmittedBy": self.submission_by,
-            "SubmittedOn": self.submission_date.isoformat(),
+            "Reference": self.submission_id #,
+            #"SubmittedBy": self.submission_by,
+            #"SubmittedOn": self.submission_date.isoformat(),
         }
 
 # ChatData for Source (final destination data structure)
@@ -205,7 +168,17 @@ class ChatData:
 class CargoData:
     source_data: SourceData
     source_id: str
+    current_timestamp: datetime = None
+    last_submission: datetime = None
+    chat_list: List[SubmissionChat] = field(default_factory=list)
     # chat_list: List[ChatData] = field(default_factory=list)
+
+    def submission_time_elapsed(self) -> float :
+        if not self.last_submission:
+            return 0.0
+        time_in_seconds = (self.current_timestamp - self.last_submission).total_seconds()
+        time_in_hours = int(time_in_seconds // 3600)
+        return time_in_hours
 
     def to_dict(self):
         # Return a dictionary representation of the CargoData object
