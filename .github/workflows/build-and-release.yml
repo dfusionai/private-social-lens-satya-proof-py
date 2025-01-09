@@ -41,7 +41,7 @@ jobs:
           echo "Image SHA256: $(sha256sum psl-proof-${{ github.run_number }}.tar.gz | cut -d' ' -f1)" >> release_body.txt
 
       - name: Upload image
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: psl-proof-image
           path: psl-proof-${{ github.run_number }}.tar.gz
