@@ -19,7 +19,7 @@ def load_config() -> Dict[str, Any]:
         'input_dir': INPUT_DIR,
         'salt': '5EkntCWI',
         'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
-        #'validator_base_api_url': 'https://d9d9-169-0-168-109.ngrok-free.app'
+        #'validator_base_api_url': 'https://64d4-169-0-168-109.ngrok-free.app'
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
     return config

@@ -110,19 +110,18 @@ class Proof:
             self.proof_response
         )
 
-
-
+        #score data
         total_score = get_total_score(
             self.proof_response.quality,
             self.proof_response.uniqueness
         )
-        print(f"Best score >> Quality: {self.proof_response.quality} | Uniqueness: {self.proof_response.uniqueness} | Total score: {total_score}")
-        score_threshold = 0.1 # threshold scores
-        self.proof_response.valid = total_score > score_threshold
-        self.proof_response.score = 0.0
-        if self.proof_response.valid:
+        print(f"Scores >> Quality: {self.proof_response.quality} | Uniqueness: {self.proof_response.uniqueness} | Total: {total_score}")
+        minium_score = 0.05 # Minium score
+        self.proof_response.valid = True # Not sure that is best way...
+        self.proof_response.score = minium_score
+        if self.proof_response.valid and total_score > minium_score:
            self.proof_response.score = total_score
-        print(f"Proof score: {self.proof_response.score } | Valid: {self.proof_response.valid}")
+        print(f"Proof score: {self.proof_response.score }")
 
         self.proof_response.attributes = {
             'score': self.proof_response.score,

@@ -122,17 +122,9 @@ def validate_data(
             )
             print(f"Chat {chat_count} >> Quality: {quality} | Uniqueness: {uniqueness}")
 
-            chat_score = get_total_score(
-                quality,
-                uniqueness
-            )
-            current_score = get_total_score(
-                proof_data.quality,
-                proof_data.uniqueness
-            )
-            if (chat_score > current_score): # determine the best scores
-                proof_data.quality = quality
-                proof_data.uniqueness = uniqueness
+            if (uniqueness > 0):
+                proof_data.quality += quality
+                proof_data.uniqueness += uniqueness
 
             #print(f"source_contents: {source_contents}")
             #RL: No longer generate data for sentiment & keywords
