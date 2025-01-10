@@ -69,7 +69,7 @@ Loop through chat/conversal list, get average scores
 
 Determine score:
    valid flag alway true
-   total score with Minium value 0.05 and Maxium value of 100
+   total score is restricted by Minimum & Maximum value
 
 
 ## Local Development

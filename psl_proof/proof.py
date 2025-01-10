@@ -116,14 +116,15 @@ class Proof:
             self.proof_response.uniqueness
         )
         print(f"Scores >> Quality: {self.proof_response.quality} | Uniqueness: {self.proof_response.uniqueness} | Total: {total_score}")
-        minium_score = 0.05 # Minium score
-        maxium_score = 100
-        self.proof_response.valid = True # Not sure that is best way...
+        reward_factor = 0.4 # VFSN / score
+        minimum_score = 0.05 / reward_factor # Minium score => 0.05 VFSN
+        maximum_score = 100 / reward_factor  # Maximum Score => 100 VFSN
+        self.proof_response.valid = True # might other factor affect it
         self.proof_response.score = total_score
-        if total_score < minium_score:
-            self.proof_response.score = minium_score
-        if total_score > maxium_score:
-            self.proof_response.score = maxium_score
+        if total_score < minimum_score:
+            self.proof_response.score = minimum_score
+        if total_score > maximum_score:
+            self.proof_response.score = maximum_score
 
         print(f"Proof score: {self.proof_response.score }")
         self.proof_response.attributes = {
