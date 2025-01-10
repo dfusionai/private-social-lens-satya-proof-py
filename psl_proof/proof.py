@@ -110,15 +110,23 @@ class Proof:
             self.proof_response
         )
 
+        maximum_score = 1
+        reward_factor = 100 # Maximium VFSN, Max. reward per chat --> 1 VFSN.
+        self.proof_response.quality = cargo_data.total_quality / reward_factor
+        if (self.proof_response.quality > maximum_score):
+            self.proof_response.quality = maximum_score
+
+        self.proof_response.uniqueness = cargo_data.total_uniqueness / reward_factor
+        if (self.proof_response.uniqueness > maximum_score):
+            self.proof_response.uniqueness = maximum_score
         #score data
         total_score = get_total_score(
             self.proof_response.quality,
             self.proof_response.uniqueness
         )
         print(f"Scores >> Quality: {self.proof_response.quality} | Uniqueness: {self.proof_response.uniqueness} | Total: {total_score}")
-        reward_factor = 0.4 # VFSN / score
-        minimum_score = 0.05 / reward_factor # Minium score => 0.05 VFSN
-        maximum_score = 100 / reward_factor  # Maximum Score => 100 VFSN
+
+        minimum_score = 0.05 / reward_factor
         self.proof_response.valid = True # might other factor affect it
         self.proof_response.score = total_score
         if total_score < minimum_score:

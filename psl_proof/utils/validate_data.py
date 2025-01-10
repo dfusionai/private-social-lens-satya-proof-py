@@ -10,7 +10,7 @@ def get_total_score(quality, uniqueness)-> float:
     total_score = (quality * 0.5
         + uniqueness * 0.5)
 
-    return round(total_score, 2)
+    return total_score
 
 def get_quality_score(
     source_chat: SourceChatData
@@ -50,7 +50,7 @@ def get_quality_score(
     t = timeliness_value
     p = thoughtfulness_of_conversation
     l = contextualness_of_conversation
-    return round((a*t + b*t + c*l)/(a+b+c),2)
+    return (a*t + b*t + c*l)/(a+b+c)
 
 
 def get_uniqueness_score(
@@ -99,9 +99,10 @@ def validate_data(
     source_chats = source_data.source_chats
 
     #Reset valuse
-    proof_data.quality = 0.0
-    proof_data.uniqueness = 0.0
+    cargo_data.total_quality = 0.0
+    cargo_data.total_uniqueness = 0.0
     chat_count = 0
+
     # Loop through chat_data_list
     for source_chat in source_chats:
         chat_count += 1
@@ -125,8 +126,8 @@ def validate_data(
             print(f"Chat {chat_count} >> Quality: {quality} | Uniqueness: {uniqueness}")
             # can not be duplicate data...
             if (uniqueness > 0):
-                proof_data.quality += quality
-                proof_data.uniqueness += uniqueness
+                cargo_data.total_quality  += quality
+                cargo_data.total_uniqueness  += uniqueness
 
             #print(f"source_contents: {source_contents}")
             #RL: No longer generate data for sentiment & keywords

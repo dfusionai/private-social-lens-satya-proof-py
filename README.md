@@ -69,6 +69,7 @@ Loop through chat/conversal list, get average scores
 
 Determine score:
    valid flag alway true
+   normalise total score to value range 0 to 1
    total score is restricted by Minimum & Maximum value
 
 
