@@ -117,12 +117,15 @@ class Proof:
         )
         print(f"Scores >> Quality: {self.proof_response.quality} | Uniqueness: {self.proof_response.uniqueness} | Total: {total_score}")
         minium_score = 0.05 # Minium score
+        maxium_score = 100
         self.proof_response.valid = True # Not sure that is best way...
-        self.proof_response.score = minium_score
-        if self.proof_response.valid and total_score > minium_score:
-           self.proof_response.score = total_score
-        print(f"Proof score: {self.proof_response.score }")
+        self.proof_response.score = total_score
+        if total_score < minium_score:
+            self.proof_response.score = minium_score
+        if total_score > maxium_score:
+            self.proof_response.score = maxium_score
 
+        print(f"Proof score: {self.proof_response.score }")
         self.proof_response.attributes = {
             'score': self.proof_response.score,
             'did_score_content': True,

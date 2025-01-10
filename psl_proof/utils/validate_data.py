@@ -6,8 +6,10 @@ from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHi
 import math
 
 def get_total_score(quality, uniqueness)-> float:
+    #total_score = quality # Since uniqueness always 1
     total_score = (quality * 0.5
         + uniqueness * 0.5)
+
     return round(total_score, 2)
 
 def get_quality_score(
@@ -121,7 +123,7 @@ def validate_data(
               cargo_data.chat_histories
             )
             print(f"Chat {chat_count} >> Quality: {quality} | Uniqueness: {uniqueness}")
-
+            # can not be duplicate data...
             if (uniqueness > 0):
                 proof_data.quality += quality
                 proof_data.uniqueness += uniqueness
