@@ -63,11 +63,14 @@ Loop through chat/conversal list, get average scores
 2. Uniqueness scores (us) based,
    a. For each chat, fetch the timestamp of the last entry.
    b. Determine the time difference (td) between the last entry and the current timestamp:
-   c. If td > 12 hours, assign a Uniqueness Score of 1.0 for that chat, else 0.0
+   c. If td > 1 hour, assign a Uniqueness Score of 1.0 for that chat, else 0.0
+3. Detemine the best score (bs)
+   a. chat score: cs = qs x 0.5 + us x 0.5
+   b. bs = Max(cs)
 
-Detemine total score (ts) base on rate factor
-1. ts = qs x 0.5 + us x 0.5
-2. valid if ts > 0.5 (threshold)
+Determine score is valid if bs > 0.1 (threshold)
+
+
 
 
 ## Local Development

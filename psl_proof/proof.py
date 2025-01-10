@@ -8,11 +8,12 @@ from datetime import datetime, timezone
 from psl_proof.models.proof_response import ProofResponse
 from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_base64, deserialize_bloom_filter_base64
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
-from psl_proof.utils.validate_data import validate_data
+from psl_proof.utils.validate_data import validate_data, get_total_score
 from psl_proof.utils.submission import submit_data
 from psl_proof.utils.verification import verify_token, VerifyTokenResult
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory
 from psl_proof.utils.submission import get_submission_historical_data
+
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
@@ -109,17 +110,19 @@ class Proof:
             self.proof_response
         )
 
-        #Might need to increase the rate factor for Quality
-        total_score = (self.proof_response.quality * 0.5
-            + self.proof_response.uniqueness * 0.5)
-        total_score = round(total_score, 2)
 
+
+        total_score = get_total_score(
+            self.proof_response.quality,
+            self.proof_response.uniqueness
+        )
+        print(f"Best score >> Quality: {self.proof_response.quality} | Uniqueness: {self.proof_response.uniqueness} | Total score: {total_score}")
         score_threshold = 0.1 # threshold scores
         self.proof_response.valid = total_score > score_threshold
         self.proof_response.score = 0.0
         if self.proof_response.valid:
            self.proof_response.score = total_score
-        print(f"proof score: {self.proof_response.score }")
+        print(f"Proof score: {self.proof_response.score } | Valid: {self.proof_response.valid}")
 
         self.proof_response.attributes = {
             'score': self.proof_response.score,

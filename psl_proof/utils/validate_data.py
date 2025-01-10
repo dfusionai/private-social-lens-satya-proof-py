@@ -1,8 +1,14 @@
 from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
+
 from typing import List, Dict, Any
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
 import math
+
+def get_total_score(quality, uniqueness)-> float:
+    total_score = (quality * 0.5
+        + uniqueness * 0.5)
+    return round(total_score, 2)
 
 def get_quality_score(
     source_chat: SourceChatData
@@ -90,15 +96,14 @@ def validate_data(
     source_data : SourceChatData = cargo_data.source_data
     source_chats = source_data.source_chats
 
-    total_quality = 0.00
-    total_uniqueness = 0.00
+    #Reset valuse
+    proof_data.quality = 0.0
+    proof_data.uniqueness = 0.0
     chat_count = 0
-
-    # Loop through the chat_data_list
+    # Loop through chat_data_list
     for source_chat in source_chats:
-
+        chat_count += 1
         #print(f"source_chat:{source_chat}")
-        chat_count += 1  # Increment chat count
         source_contents = None
         contents_length = 0
         if source_chat.contents:  # Ensure chat_contents is not None
@@ -108,22 +113,26 @@ def validate_data(
 
         if (contents_length > 0):
 
-            chat_id = source_chat.chat_id
-
-            #quality = source_chat.quality_score()
             quality = get_quality_score(
               source_chat
             )
-            print(f"Chat({chat_id}) - quality: {quality}")
-
-            total_quality += quality
-
             uniqueness = get_uniqueness_score(
               source_chat,
               cargo_data.chat_histories
             )
-            print(f"Chat({chat_id}) - uniqueness: {uniqueness}")
-            total_uniqueness += uniqueness
+            print(f"Chat {chat_count} >> Quality: {quality} | Uniqueness: {uniqueness}")
+
+            chat_score = get_total_score(
+                quality,
+                uniqueness
+            )
+            current_score = get_total_score(
+                proof_data.quality,
+                proof_data.uniqueness
+            )
+            if (chat_score > current_score): # determine the best scores
+                proof_data.quality = quality
+                proof_data.uniqueness = uniqueness
 
             #print(f"source_contents: {source_contents}")
             #RL: No longer generate data for sentiment & keywords
@@ -137,12 +146,3 @@ def validate_data(
             #cargo_data.chat_list.append(
             #    chat_data
             #)
-
-    # Calculate uniqueness if there are chats
-    if chat_count > 0:
-        proof_data.quality = round(total_quality / chat_count, 2)
-        print(f"proof_data.quality: {proof_data.quality}")
-
-        uniqueness = round(total_uniqueness / chat_count, 2)
-        proof_data.uniqueness = uniqueness
-        print(f"proof_data.uniqueness: {proof_data.uniqueness}")
