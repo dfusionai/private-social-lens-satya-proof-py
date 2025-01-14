@@ -102,19 +102,21 @@ class SourceData:
     user: str
     submission_token: str
     submission_date: datetime
+    proof_token: str 
     source_chats: List[SourceChatData]  # List of SourceChatData instances
 
-    def __init__(self, source, submission_token, submission_date, user, source_chats=None):
+    def __init__(self, source, submission_token, submission_date, user, source_chats=None, proof_token=None, ):
         self.source = source
         self.user = user
         self.submission_token = submission_token
         self.submission_date = submission_date
+        proof_token = proof_token
         self.source_chats = source_chats or []
 
     def to_dict(self):
         return {
             "source": self.source.name,  # Use .name to convert enum to string
-            "user": self.user,
+            "user": str(self.user),
             "submission_date": self.submission_date.isoformat() if isinstance(self.submission_date, datetime) else str(self.submission_date),
             "chats": [source_chat.to_dict() for source_chat in self.source_chats]
         }
@@ -137,7 +139,7 @@ class SourceData:
     def to_verification_json(self) -> dict:
         return {
             "Token": self.submission_token,
-            "Reference": self.submission_by() #
+            "Reference": self.submission_by()
         }
 
 # ChatData for Source (final destination data structure)
