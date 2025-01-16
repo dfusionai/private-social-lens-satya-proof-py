@@ -169,6 +169,8 @@ class CargoData:
     last_submission: datetime = None
     chat_list: List[SubmissionChat] = field(default_factory=list)
     # chat_list: List[ChatData] = field(default_factory=list)
+    total_quality = 0.0
+    total_uniqueness = 0.0
 
     def submission_time_elapsed(self) -> float :
         if not self.last_submission:
