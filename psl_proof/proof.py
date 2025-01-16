@@ -43,7 +43,6 @@ class Proof:
             (source_data.source, source_data.user),
             salt
         )
-        source_data.submission_by = source_user_hash_64
         proof_failed_reason = ""
         verify_result = verify_token(
             self.config,
@@ -73,7 +72,7 @@ class Proof:
             cargo_data.chat_histories = submission_history_data.chat_histories
             cargo_data.last_submission = submission_history_data.last_submission
 
-        cool_down_period = 12 # hours
+        cool_down_period = 4 # hours
         submission_time_elapsed = cargo_data.submission_time_elapsed()
         if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cool_down_period:
             is_data_authentic = False
@@ -202,8 +201,6 @@ def get_source_data(
     submission_token = input_data.get('submission_token', '')
     #print("submission_token: {submission_token}")
 
-    submission_id = input_data.get('submission_id', '')
-
     input_user = input_data.get('user')
     #print(f"input_user: {input_user}")
 
@@ -211,8 +208,6 @@ def get_source_data(
         source=input_source,
         user=input_user,
         submission_token = submission_token,
-        submission_id = submission_id,
-        submission_by = input_user,
         submission_date = submission_timestamp
     )
 
