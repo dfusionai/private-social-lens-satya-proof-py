@@ -8,5 +8,5 @@ def get_validation_api_url(
     if not base_url:
         RuntimeError("validator_base_api_url: is not specified.")
     url = f"{base_url}/{api_path}"
-    print(f"Connected: {url}")
+    print(f"API call: {url}")
     return url

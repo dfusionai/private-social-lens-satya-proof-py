@@ -8,11 +8,12 @@ from datetime import datetime, timezone
 from psl_proof.models.proof_response import ProofResponse
 from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_base64, deserialize_bloom_filter_base64
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
-from psl_proof.utils.validate_data import validate_data
+from psl_proof.utils.validate_data import validate_data, get_total_score
 from psl_proof.utils.submission import submit_data
 from psl_proof.utils.verification import verify_token, VerifyTokenResult
-from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat
-from psl_proof.utils.submission import get_submisssion_historical_data
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory
+from psl_proof.utils.submission import get_submission_historical_data
+
 
 class Proof:
     def __init__(self, config: Dict[str, Any]):
@@ -43,7 +44,6 @@ class Proof:
             (source_data.source, source_data.user),
             salt
         )
-        source_data.submission_by = source_user_hash_64
         proof_failed_reason = ""
         verify_result = verify_token(
             self.config,
@@ -62,11 +62,9 @@ class Proof:
             current_timestamp = current_timestamp
         )
 
-
-
         if is_data_authentic:
-            #Validate source data via valiator.api & obtain unquiness
-            submission_history_data : SubmissionHistory = get_submisssion_historical_data(
+            #Validate source data via validator.api & obtain uniqueness
+            submission_history_data : SubmissionHistory = get_submission_historical_data(
                 self.config,
                 source_data
             )
@@ -75,7 +73,7 @@ class Proof:
             cargo_data.chat_histories = submission_history_data.chat_histories
             cargo_data.last_submission = submission_history_data.last_submission
 
-        cool_down_period = 12
+        cool_down_period = 4 # hours
         submission_time_elapsed = cargo_data.submission_time_elapsed()
         if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cool_down_period:
             is_data_authentic = False
@@ -98,8 +96,7 @@ class Proof:
                 'did_score_content': False,
                 'source': source_data.source.name,
                 'revision': data_revision,
-                'submitted_on': current_timestamp.isoformat(),
-                'chat_data': None
+                'submitted_on': current_timestamp.isoformat()
             }
             self.proof_response.metadata = metadata
             logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
@@ -112,18 +109,31 @@ class Proof:
             self.proof_response
         )
 
-        score_threshold = 0.5 #UPDATE after testing some conversations
-        self.proof_response.valid = (
-            is_data_authentic
-            and self.proof_response.quality >= score_threshold
-            and self.proof_response.uniqueness >= score_threshold
-        )
-        total_score = 0.0 if not self.proof_response.valid else (
-              self.proof_response.quality * 0.5
-            + self.proof_response.uniqueness * 0.5
-        )
-        self.proof_response.score = round(total_score, 2)
+        maximum_score = 1
+        reward_factor = 100 # Maximium VFSN, Max. reward per chat --> 1 VFSN.
+        self.proof_response.quality = cargo_data.total_quality / reward_factor
+        if (self.proof_response.quality > maximum_score):
+            self.proof_response.quality = maximum_score
 
+        self.proof_response.uniqueness = cargo_data.total_uniqueness / reward_factor
+        if (self.proof_response.uniqueness > maximum_score):
+            self.proof_response.uniqueness = maximum_score
+        #score data
+        total_score = get_total_score(
+            self.proof_response.quality,
+            self.proof_response.uniqueness
+        )
+        print(f"Scores >> Quality: {self.proof_response.quality} | Uniqueness: {self.proof_response.uniqueness} | Total: {total_score}")
+
+        minimum_score = 0.05 / reward_factor
+        self.proof_response.valid = True # might other factor affect it
+        self.proof_response.score = total_score
+        if total_score < minimum_score:
+            self.proof_response.score = minimum_score
+        if total_score > maximum_score:
+            self.proof_response.score = maximum_score
+
+        print(f"Proof score: {self.proof_response.score }")
         self.proof_response.attributes = {
             'score': self.proof_response.score,
             'did_score_content': True,
@@ -144,7 +154,6 @@ class Proof:
             self.proof_response.set_proof_is_invalid()
             self.proof_response.attributes.pop('score', None)
             self.proof_response.attributes.pop('did_score_content', None)
-            self.proof_response.attributes.pop('chat_data', None)
             self.proof_response.attributes.update({
                 'proof_valid': False,
                 'proof_failed_reason': submit_data_result.error_text
@@ -205,8 +214,6 @@ def get_source_data(
 
     submission_token = input_data.get('submission_token', '')
     #print("submission_token: {submission_token}")
-
-    submission_id = input_data.get('submission_id', '')
 
     input_user = input_data.get('user')
     #print(f"input_user: {input_user}")

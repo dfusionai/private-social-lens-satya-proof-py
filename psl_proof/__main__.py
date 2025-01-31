@@ -7,7 +7,6 @@ import zipfile
 from typing import Dict, Any
 
 from psl_proof.proof import Proof
-
 INPUT_DIR, OUTPUT_DIR = '/input', '/output'
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -20,7 +19,6 @@ def load_config() -> Dict[str, Any]:
         'input_dir': INPUT_DIR,
         'salt': '5EkntCWI',
         'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
-        #'validator_base_api_url': 'https://d9d9-169-0-168-109.ngrok-free.app'
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
     return config

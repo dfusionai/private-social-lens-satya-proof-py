@@ -56,6 +56,23 @@ The proof can be configured using environment variables.
 
 If you want to use a language other than Python, you can modify the Dockerfile to install the necessary dependencies and build the proof task in the desired language.
 
+## Proof Scores
+
+Loop through chat/conversal list, get average scores
+1. Quality scores (qs) based on Timely, Thoughtful & Contextual
+2. Uniqueness scores (us) based,
+   a. For each chat, fetch the timestamp of the last entry.
+   b. Determine the time difference (td) between the last entry and the current timestamp:
+   c. If td > 1 hour, assign a Uniqueness Score of 1.0 for that chat, else 0.0
+3. Detemine the total score (ts)
+   a. if us > 0, then add value to ts.
+
+Determine score:
+   valid flag alway true
+   normalise total score to value range 0 to 1
+   total score is restricted by Minimum & Maximum value
+
+
 ## Local Development
 
 To run the proof locally for testing, you can use Docker:

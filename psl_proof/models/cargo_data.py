@@ -7,8 +7,7 @@ from typing import Union
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from psl_proof.models.submission_dtos import ChatHistory
-
+from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat
 
 # Enum for DataSource
 class DataSource(Enum):
@@ -102,48 +101,45 @@ class SourceData:
     source: DataSource         # "telegram"
     user: str
     submission_token: str
-    submission_id: str
-    submission_by: str
     submission_date: datetime
+    proof_token: str
     source_chats: List[SourceChatData]  # List of SourceChatData instances
 
-    def __init__(self, source, submission_token, submission_id, submission_by, submission_date, user, source_chats=None):
+    def __init__(self, source, submission_token, submission_date, user, source_chats=None, proof_token=None, ):
         self.source = source
         self.user = user
         self.submission_token = submission_token
-        self.submission_id = submission_id
-        self.submission_by = submission_by
         self.submission_date = submission_date
+        proof_token = proof_token
         self.source_chats = source_chats or []
 
     def to_dict(self):
         return {
             "source": self.source.name,  # Use .name to convert enum to string
-            "user": self.user,
-            "submission_id": self.submission_id,
-            "submission_by": self.submission_by,
+            "user": str(self.user),
             "submission_date": self.submission_date.isoformat() if isinstance(self.submission_date, datetime) else str(self.submission_date),
             "chats": [source_chat.to_dict() for source_chat in self.source_chats]
         }
 
     def to_submission_json(self) :
         json = {
-            "DataSource": self.source.value,  # Use .name to convert enum to string
-            "SourceId": self.submission_id,
+            "DataSource": self.source.value,  # enum value
+            "SourceId": str(self.user),
             "ProofToken": self.proof_token,
-            "SubmittedBy": self.submission_by,
+            "SubmittedBy": self.submission_by(),
             "SubmittedOn": self.submission_date.isoformat(),
             "Chats": [source_chat.to_submission_json() for source_chat in self.source_chats]
         }
         #print(f"Submission json:{json}")
         return json
 
+    def submission_by(self):
+        return f"{self.source.name}:{self.user}"
+
     def to_verification_json(self) -> dict:
         return {
             "Token": self.submission_token,
-            "Reference": self.submission_id #,
-            #"SubmittedBy": self.submission_by,
-            #"SubmittedOn": self.submission_date.isoformat(),
+            "Reference": self.submission_by()
         }
 
 # ChatData for Source (final destination data structure)
@@ -172,7 +168,10 @@ class CargoData:
     current_timestamp: datetime = None
     last_submission: datetime = None
     chat_histories: List[ChatHistory] = field(default_factory=list)
-    chat_list: List[ChatData] = field(default_factory=list)
+    chat_list: List[SubmissionChat] = field(default_factory=list)
+    # chat_list: List[ChatData] = field(default_factory=list)
+    total_quality = 0.0
+    total_uniqueness = 0.0
 
     def submission_time_elapsed(self) -> float :
         if not self.last_submission:

@@ -1,10 +1,16 @@
 from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
+
 from typing import List, Dict, Any
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
-from psl_proof.utils.feature_extraction import get_sentiment_data, get_keywords_keybert
-
 import math
+
+def get_total_score(quality, uniqueness)-> float:
+    #total_score = quality # Since uniqueness always 1
+    total_score = (quality * 0.5
+        + uniqueness * 0.5)
+
+    return total_score
 
 def get_quality_score(
     source_chat: SourceChatData
@@ -44,7 +50,7 @@ def get_quality_score(
     t = timeliness_value
     p = thoughtfulness_of_conversation
     l = contextualness_of_conversation
-    return round((a*t + b*t + c*l)/(a+b+c),2)
+    return (a*t + b*t + c*l)/(a+b+c)
 
 
 def get_uniqueness_score(
@@ -61,8 +67,9 @@ def get_uniqueness_score(
     # Loop through chat_histories to find a match by source_chat_id
     for history in chat_histories:
         if history.source_chat_id == source_chat.chat_id_as_key():
-            # Loop through chat_list to find a match by chat_ended_On date
+            # Loop through chat_list: should be only one the most recent record
             for historical_chat in history.chat_list:
+
                 historical_chat_ended_on = historical_chat.chat_ended_on
 
                 if historical_chat_ended_on.tzinfo is not None:
@@ -72,10 +79,13 @@ def get_uniqueness_score(
                 if chat_ended_on.tzinfo is not None:
                     chat_ended_on = chat_ended_on.replace(tzinfo=None)
 
+                # based on datetime of last entry of conversation/chat
+                # determin time different between last submission and current submission
                 time_in_seconds = (chat_ended_on - historical_chat_ended_on).total_seconds()
                 time_in_hours = int(time_in_seconds // 3600)
-                if time_in_hours <= 12: # within 24 Hours..
+                if time_in_hours <= 1 : # within 1 hours
                     return 0.0
+                return 1.0 # unique
 
                 #if time_in_hours <= 24: # within 24 Hours..
                 #    print(f"time_in_hours:{time_in_hours}")
@@ -93,15 +103,15 @@ def validate_data(
     source_data : SourceChatData = cargo_data.source_data
     source_chats = source_data.source_chats
 
-    total_quality = 0.00
-    total_uniqueness = 0.00
+    #Reset valuse
+    cargo_data.total_quality = 0.0
+    cargo_data.total_uniqueness = 0.0
     chat_count = 0
 
-    # Loop through the chat_data_list
+    # Loop through chat_data_list
     for source_chat in source_chats:
-
+        chat_count += 1
         #print(f"source_chat:{source_chat}")
-        chat_count += 1  # Increment chat count
         source_contents = None
         contents_length = 0
         if source_chat.contents:  # Ensure chat_contents is not None
@@ -111,22 +121,18 @@ def validate_data(
 
         if (contents_length > 0):
 
-            chat_id = source_chat.chat_id
-
-            #quality = source_chat.quality_score()
             quality = get_quality_score(
               source_chat
             )
-            print(f"Chat({chat_id}) - quality: {quality}")
-
-            total_quality += quality
-
             uniqueness = get_uniqueness_score(
               source_chat,
               cargo_data.chat_histories
             )
-            print(f"Chat({chat_id}) - uniqueness: {uniqueness}")
-            total_uniqueness += uniqueness
+            print(f"Chat {chat_count} >> Quality: {quality} | Uniqueness: {uniqueness}")
+            # can not be duplicate data...
+            if (uniqueness > 0):
+                cargo_data.total_quality  += quality
+                cargo_data.total_uniqueness  += uniqueness
 
             #print(f"source_contents: {source_contents}")
 
@@ -145,16 +151,6 @@ def validate_data(
                 keywords = chat_keywords
             )
             #print(f"chat_data: {chat_data}")
-
             cargo_data.chat_list.append(
                 chat_data
             )
-
-    # Calculate uniqueness if there are chats
-    if chat_count > 0:
-        proof_data.quality = round(total_quality / chat_count, 2)
-        print(f"proof_data.quality: {proof_data.quality}")
-
-        uniqueness = round(total_uniqueness / chat_count, 2)
-        proof_data.uniqueness = uniqueness
-        print(f"proof_data.uniqueness: {proof_data.uniqueness}")
