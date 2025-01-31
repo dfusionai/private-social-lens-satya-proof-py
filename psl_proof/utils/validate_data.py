@@ -1,9 +1,12 @@
+import math
+
 from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
 
 from typing import List, Dict, Any
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
-import math
+from psl_proof.utils.feature_extraction import get_keywords_keybert, get_sentiment_data
+
 
 def get_total_score(quality, uniqueness)-> float:
     #total_score = quality # Since uniqueness always 1
@@ -87,6 +90,11 @@ def get_uniqueness_score(
                     return 0.0
                 return 1.0 # unique
 
+                #if time_in_hours <= 24: # within 24 Hours..
+                #    print(f"time_in_hours:{time_in_hours}")
+                #    time_decay = math.log(2) / 12   #half_life: 12hrs, more recent less scores...
+                #    return math.exp(-time_decay * (24 - time_in_hours))
+
     # If no matching source_chat_id is found, return 1
     return 1.0
 
@@ -130,14 +138,22 @@ def validate_data(
                 cargo_data.total_uniqueness  += uniqueness
 
             #print(f"source_contents: {source_contents}")
-            #RL: No longer generate data for sentiment & keywords
-            # Create a ChatData instance and add it to the list
-            #chat_data = ChatData(
-            #    chat_length=contents_length,
-            #    chat_start_on = source_chat.chat_start_on,
-            #    chat_ended_on = source_chat.chat_ended_on
-            #)
+
+            chat_sentiment = get_sentiment_data(
+                source_contents
+            )
+            chat_keywords = get_keywords_keybert(
+                source_contents
+            )
+
+            chat_data = ChatData(
+                chat_length=contents_length,
+                chat_start_on = source_chat.chat_start_on,
+                chat_ended_on = source_chat.chat_ended_on,
+                sentiment = chat_sentiment,
+                keywords = chat_keywords
+            )
             #print(f"chat_data: {chat_data}")
-            #cargo_data.chat_list.append(
-            #    chat_data
-            #)
+            cargo_data.chat_list.append(
+                chat_data
+            )

@@ -139,8 +139,8 @@ class Proof:
             'did_score_content': True,
             'source': source_data.source.name,
             'revision': data_revision,
-            'submitted_on': current_timestamp.isoformat()
-            #'chat_data': None #RL: No longer generate useful data...
+            'submitted_on': current_timestamp.isoformat(),
+            'chat_data': cargo_data.get_chat_list_data()
         }
         self.proof_response.metadata = metadata
 
@@ -220,7 +220,7 @@ def get_source_data(
 
     source_data = SourceData(
         source=input_source,
-        user=input_user,
+        user = input_user,
         submission_token = submission_token,
         submission_date = submission_timestamp
     )
