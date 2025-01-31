@@ -1,9 +1,12 @@
+import math
+
 from psl_proof.models.cargo_data import CargoData, ChatData, SourceChatData, SourceData
 from psl_proof.models.proof_response import ProofResponse
 
 from typing import List, Dict, Any
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
-import math
+from psl_proof.utils.feature_extraction import get_keywords_keybert, get_sentiment_data
+
 
 def get_total_score(quality, uniqueness)-> float:
     #total_score = quality # Since uniqueness always 1

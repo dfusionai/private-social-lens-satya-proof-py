@@ -220,10 +220,8 @@ def get_source_data(
 
     source_data = SourceData(
         source=input_source,
-        user=input_user,
+        user = input_user,
         submission_token = submission_token,
-        submission_id = submission_id,
-        submission_by = input_user,
         submission_date = submission_timestamp
     )
 
