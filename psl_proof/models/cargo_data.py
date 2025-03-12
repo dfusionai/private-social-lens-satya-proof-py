@@ -11,7 +11,8 @@ from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat
 
 # Enum for DataSource
 class DataSource(Enum):
-    telegram = 0
+    telegram = 0,
+    telegramMiner = 1
 
 # Source Chat Data
 @dataclass
