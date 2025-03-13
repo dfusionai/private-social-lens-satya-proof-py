@@ -135,7 +135,10 @@ class SourceData:
         return json
 
     def submission_by(self):
-        return f"{self.source.name}:{self.user}"
+        source = self.source
+        if (source == DataSource.telegramMiner):
+           source = DataSource.telegram
+        return f"{source.name}:{self.user}"
 
     def to_verification_json(self) -> dict:
         return {
