@@ -10,5 +10,5 @@ requests==2.32.3
 typing_extensions==4.12.2
 urllib3==2.2.3
 xxhash==3.5.0
-keybert==0.8.5
-transformers==4.47.0
+#keybert==0.8.5          #Required AI keywords
+#transformers==4.47.0    #Required AI keywords
