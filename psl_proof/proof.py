@@ -73,11 +73,13 @@ class Proof:
             cargo_data.chat_histories = submission_history_data.chat_histories
             cargo_data.last_submission = submission_history_data.last_submission
 
-        cool_down_period = 4 # hours
-        submission_time_elapsed = cargo_data.submission_time_elapsed()
-        if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cool_down_period:
-            is_data_authentic = False
-            proof_failed_reason = f"Last submission was made within the past {cool_down_period} hours"
+        cooling_down_period = verify_result.cooling_down_period
+        print(f"cooling_down_period: {cooling_down_period}")
+        if (cooling_down_period and cooling_down_period > 0):
+            submission_time_elapsed = cargo_data.submission_time_elapsed()
+            if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cooling_down_period:
+                is_data_authentic = False
+                proof_failed_reason = f"Last submission was made within the past {cooling_down_period} hours"
 
         metadata = MetaData(
           source_id = source_user_hash_64,
