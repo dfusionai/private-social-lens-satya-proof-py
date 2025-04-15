@@ -18,8 +18,9 @@ def load_config() -> Dict[str, Any]:
         'dlp_id': 4,
         'input_dir': INPUT_DIR,
         'salt': '5EkntCWI',
-        'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
-        #'validator_base_api_url': 'https://d945-169-0-169-196.ngrok-free.app'
+        'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai',
+        #'validator_base_api_url': 'https://8b2b-169-0-171-55.ngrok-free.app',
+        'top_n_chats' : 50
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
     return config
