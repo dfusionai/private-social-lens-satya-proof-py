@@ -136,10 +136,6 @@ def validate_data(
               cargo_data.chat_histories
             )
 
-            # RL_TestCode_Only
-            # quality = min(0.1 * chat_count + quality, 1)
-            # uniqueness = min(0.1 * chat_count + uniqueness, 1 )
-
             print(f"Chat {chat_count} >> Quality: {quality} | Uniqueness: {uniqueness}")
             # can not be duplicate data...
             total_score = 0
@@ -174,7 +170,7 @@ def validate_data(
 
     # Sort scores by total_score descending
     sorted_scores = sorted(scores, key=lambda x: x[2], reverse=True)
-    print(f"All Scores count: {len(sorted_scores)}")
+    # print(f"All Scores count: {len(sorted_scores)}")
 
     # Determine top_n from config, defaulting to all if not specified
     max_n = config.get('top_n_chats', 50)
@@ -183,7 +179,7 @@ def validate_data(
 
     # Select top N entries
     selected_scores = sorted_scores[:top_n]
-    print(f"Top {max_n} Scores count: {len(selected_scores)}")
+    # print(f"Top {max_n} Scores count: {len(selected_scores)}")
 
 
     # Sum the Top N scores

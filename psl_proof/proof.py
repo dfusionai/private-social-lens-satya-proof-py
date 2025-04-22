@@ -113,7 +113,7 @@ class Proof:
         )
 
         maximum_score = 1
-        reward_factor = self.config['top_n_chats'] # Top N chats allow to submitted.
+        reward_factor = self.config['top_n_chats'] # normalise the value, total reward --> max. score = 1.00
         self.proof_response.quality = cargo_data.total_quality / reward_factor
         if (self.proof_response.quality > maximum_score):
             self.proof_response.quality = maximum_score
@@ -139,11 +139,12 @@ class Proof:
         print(f"Proof score: {self.proof_response.score }")
         self.proof_response.attributes = {
             'score': self.proof_response.score,
+            'firs_contribution': 0.25,
             'did_score_content': True,
             'source': source_data.source.name,
             'revision': data_revision,
-            'submitted_on': current_timestamp.isoformat() #,
-            #'chat_data': cargo_data.get_chat_list_data()
+            'submitted_on': current_timestamp.isoformat(),
+            'report_data': cargo_data.get_chat_list_data()
         }
         self.proof_response.metadata = metadata
 
@@ -185,7 +186,7 @@ def get_telegram_data(
             message_date = message_date.astimezone(timezone.utc)
 
         #print(f"message_date: {message_date}")
-        
+
         # Extract the message content
         message = input_content.get('content', {})
         if isinstance(message, dict) and message.get("@type") == "messageText":
