@@ -6,4 +6,5 @@ from datetime import datetime
 class VerifyTokenResult:
     is_valid: bool
     error_text: str
+    cooling_down_period: float
     proof_token: str
