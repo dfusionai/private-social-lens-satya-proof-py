@@ -23,6 +23,7 @@ class SourceChatData:
     total_content_length: int = 0
     total_content_value: int = 0
     chat_count : int = 0
+    tik_token : int = 0
     chat_start_on: datetime = None
     chat_ended_on: datetime = None
 
@@ -89,11 +90,10 @@ class SourceChatData:
             "ParticipantCount": len(self.participants),
             "ChatCount": self.chat_count,
             "ChatLength": self.total_content_length,
+            "TikToken": self.tik_token,
             "ChatStartOn": chat_start_on.isoformat(),
             "ChatEndedOn": chat_ended_on.isoformat()
         }
-
-
 
 
 # SourceData with enum and chat data

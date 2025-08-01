@@ -7,6 +7,9 @@ from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
 
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
+
+from psl_proof.utils.open_ai_token import OpenAIToken
+
 #from psl_proof.utils.feature_extraction import get_keywords_keybert, get_sentiment_data
 
 def get_total_score(quality, uniqueness)-> float:
@@ -143,6 +146,16 @@ def validate_data(
                 total_score = get_total_score(quality, uniqueness)
                 scores.append((quality, uniqueness, total_score))
 
+            try :
+                counter = OpenAIToken(model="gpt-4-turbo")
+                source_chat.tik_token = counter.count_text_tokens(
+                    source_contents
+                )
+                print(f"Chat {chat_count} >> tik_token: {source_chat.tik_token} ")
+            except ValueError as e:
+                source_chat.tik_token = 0
+                logging.error(f"Chat {chat_count} >> Count tik_token with Error: {e} ")
+
             #print(f"source_contents: {source_contents}")
 
             # disable on 27/03/2025
@@ -185,5 +198,6 @@ def validate_data(
     # Sum the Top N scores
     cargo_data.total_quality = sum(score[0] for score in selected_scores)
     cargo_data.total_uniqueness = sum(score[1] for score in selected_scores)
+
     # print(f"cargo_data.total_quality: {cargo_data.total_quality}")
     # print(f"cargo_data.total_uniqueness: {cargo_data.total_uniqueness}")

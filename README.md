@@ -75,7 +75,7 @@ Determine score:
 
 ## Local Development
 
-To run the proof locally for testing, you can use Docker:
+pip install -r requirements.txt
 
 ```bash
 docker build -t psl-proof .
