@@ -31,6 +31,7 @@ class Proof:
         source_data = None
         for input_filename in os.listdir(self.config['input_dir']):
             input_file = os.path.join(self.config['input_dir'], input_filename)
+            print(f"input_file: {input_file}")
             with open(input_file, 'r') as f:
                 input_data = json.load(f)
                 source_data = get_source_data(
@@ -73,11 +74,13 @@ class Proof:
             cargo_data.chat_histories = submission_history_data.chat_histories
             cargo_data.last_submission = submission_history_data.last_submission
 
-        cool_down_period = 4 # hours
-        submission_time_elapsed = cargo_data.submission_time_elapsed()
-        if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cool_down_period:
-            is_data_authentic = False
-            proof_failed_reason = f"Last submission was made within the past {cool_down_period} hours"
+        cooling_down_period = verify_result.cooling_down_period
+        # print(f"cooling_down_period: {cooling_down_period}")
+        if (cooling_down_period and cooling_down_period > 0):
+            submission_time_elapsed = cargo_data.submission_time_elapsed()
+            if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cooling_down_period:
+                is_data_authentic = False
+                proof_failed_reason = f"Last submission was made within the past {cooling_down_period} hours"
 
         metadata = MetaData(
           source_id = source_user_hash_64,
@@ -110,7 +113,7 @@ class Proof:
         )
 
         maximum_score = 1
-        reward_factor = 100 # Maximium VFSN, Max. reward per chat --> 1 VFSN.
+        reward_factor = self.config['top_n_chats'] # normalise the value, total reward --> max. score = 1.00
         self.proof_response.quality = cargo_data.total_quality / reward_factor
         if (self.proof_response.quality > maximum_score):
             self.proof_response.quality = maximum_score
@@ -136,11 +139,12 @@ class Proof:
         print(f"Proof score: {self.proof_response.score }")
         self.proof_response.attributes = {
             'score': self.proof_response.score,
+            'firs_contribution': 0.25,
             'did_score_content': True,
             'source': source_data.source.name,
             'revision': data_revision,
-            'submitted_on': current_timestamp.isoformat() #,
-            #'chat_data': cargo_data.get_chat_list_data()
+            'submitted_on': current_timestamp.isoformat(),
+            'report_data': cargo_data.get_chat_list_data()
         }
         self.proof_response.metadata = metadata
 

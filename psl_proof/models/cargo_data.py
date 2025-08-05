@@ -23,6 +23,7 @@ class SourceChatData:
     total_content_length: int = 0
     total_content_value: int = 0
     chat_count : int = 0
+    tik_token : int = 0
     chat_start_on: datetime = None
     chat_ended_on: datetime = None
 
@@ -89,11 +90,10 @@ class SourceChatData:
             "ParticipantCount": len(self.participants),
             "ChatCount": self.chat_count,
             "ChatLength": self.total_content_length,
+            "TikToken": self.tik_token,
             "ChatStartOn": chat_start_on.isoformat(),
             "ChatEndedOn": chat_ended_on.isoformat()
         }
-
-
 
 
 # SourceData with enum and chat data
@@ -150,6 +150,9 @@ class SourceData:
 @dataclass
 class ChatData:
     chat_length: int
+    total_score : float = 0
+    quality: float = 0
+    uniqueness: float = 0
     chat_start_on: datetime = None
     chat_ended_on: datetime = None
     sentiment: Dict[str, Any] = field(default_factory=dict)
@@ -158,6 +161,9 @@ class ChatData:
     def to_dict(self):
         return {
             "chat_length": self.chat_length,
+            "total_score": self.total_score,
+            "quality": self.quality,
+            "uniqueness": self.uniqueness,
             "chat_start_on": self.chat_start_on.isoformat(),
             "chat_ended_on": self.chat_ended_on.isoformat(),
             "sentiment": self.sentiment,   # No need to call .to_dict() for dicts
@@ -189,7 +195,7 @@ class CargoData:
         return {
             "source_data": self.source_data,  # Assuming source_data can be serialized directly
             "source_id": self.source_id,
-            "chat_list": get_chat_list_data()
+            "chat_list": self.get_chat_list_data()
         }
 
     @staticmethod

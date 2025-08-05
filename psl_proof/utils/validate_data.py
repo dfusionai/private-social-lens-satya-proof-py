@@ -7,6 +7,9 @@ from psl_proof.models.proof_response import ProofResponse
 from typing import List, Dict, Any
 
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, ChatHistory, SubmissionHistory
+
+from psl_proof.utils.open_ai_token import OpenAIToken
+
 #from psl_proof.utils.feature_extraction import get_keywords_keybert, get_sentiment_data
 
 def get_total_score(quality, uniqueness)-> float:
@@ -112,16 +115,19 @@ def validate_data(
     cargo_data.total_uniqueness = 0.0
     chat_count = 0
 
+    scores = []
     # Loop through chat_data_list
     for source_chat in source_chats:
         chat_count += 1
-        #print(f"source_chat:{source_chat}")
+        #print(f"source_chat {chat_count}:{source_chat}")
         source_contents = None
         contents_length = 0
         if source_chat.contents:  # Ensure chat_contents is not None
             source_contents = source_chat.content_as_text()
+
             #print(f"source_contents: {source_contents}")
             contents_length = len(source_contents)
+
 
         if (contents_length > 0):
 
@@ -132,11 +138,23 @@ def validate_data(
               source_chat,
               cargo_data.chat_histories
             )
+
             print(f"Chat {chat_count} >> Quality: {quality} | Uniqueness: {uniqueness}")
             # can not be duplicate data...
+            total_score = 0
             if (uniqueness > 0):
-                cargo_data.total_quality  += quality
-                cargo_data.total_uniqueness  += uniqueness
+                total_score = get_total_score(quality, uniqueness)
+                scores.append((quality, uniqueness, total_score))
+
+            try :
+                counter = OpenAIToken(model="gpt-4-turbo")
+                source_chat.tik_token = counter.count_text_tokens(
+                    source_contents
+                )
+                print(f"Chat {chat_count} >> tik_token: {source_chat.tik_token} ")
+            except ValueError as e:
+                source_chat.tik_token = 0
+                logging.error(f"Chat {chat_count} >> Count tik_token with Error: {e} ")
 
             #print(f"source_contents: {source_contents}")
 
@@ -150,6 +168,9 @@ def validate_data(
 
             # chat_data = ChatData(
             #     chat_length=contents_length,
+            #     total_score = total_score,
+            #     quality = quality,
+            #     uniqueness= uniqueness,
             #     chat_start_on = source_chat.chat_start_on,
             #     chat_ended_on = source_chat.chat_ended_on,
             #     sentiment = chat_sentiment,
@@ -159,3 +180,24 @@ def validate_data(
             # cargo_data.chat_list.append(
             #     chat_data
             # )
+
+    # Sort scores by total_score descending
+    sorted_scores = sorted(scores, key=lambda x: x[2], reverse=True)
+    # print(f"All Scores count: {len(sorted_scores)}")
+
+    # Determine top_n from config, defaulting to all if not specified
+    max_n = config.get('top_n_chats', 50)
+    top_n = min(max_n, len(sorted_scores))  # Ensure we don't exceed available entries
+    #print(f"top_n: {top_n}")
+
+    # Select top N entries
+    selected_scores = sorted_scores[:top_n]
+    # print(f"Top {max_n} Scores count: {len(selected_scores)}")
+
+
+    # Sum the Top N scores
+    cargo_data.total_quality = sum(score[0] for score in selected_scores)
+    cargo_data.total_uniqueness = sum(score[1] for score in selected_scores)
+
+    # print(f"cargo_data.total_quality: {cargo_data.total_quality}")
+    # print(f"cargo_data.total_uniqueness: {cargo_data.total_uniqueness}")

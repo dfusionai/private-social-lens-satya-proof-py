@@ -15,11 +15,13 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 def load_config() -> Dict[str, Any]:
     """Load proof configuration from environment variables."""
     config = {
-        'dlp_id': 4,
+        'dlp_id': os.getenv('DLP_ID',4),
         'input_dir': INPUT_DIR,
-        'salt': '5EkntCWI',
-        'validator_base_api_url': 'https://api.vana.genesis.dfusion.ai'
-        #'validator_base_api_url': 'https://9634-169-0-170-71.ngrok-free.app'
+        'salt': os.getenv('SALT','5EkntCWI'),
+        'top_n_chats' : os.getenv('TOP_N_CHATS',  50),
+        'validator_base_api_url': os.getenv('VALIDATOR_BASE_API_URL','https://api.vana.genesis.dfusion.ai')
+        #'validator_base_api_url': 'https://f282-169-0-169-8.ngrok-free.app'
+
     }
     logging.info(f"Using config: {json.dumps(config, indent=2)}")
     return config

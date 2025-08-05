@@ -24,6 +24,7 @@ def verify_token(config: Dict[str, Any], source_data: SourceData) -> Optional[Ve
                 result = VerifyTokenResult(
                     is_valid=result_json.get("isValid", False),
                     error_text=result_json.get("errorText", ""),
+                    cooling_down_period=result_json.get("coolingDownPeriod", 0),
                     proof_token=result_json.get("proofToken", "")
                 )
                 return result
