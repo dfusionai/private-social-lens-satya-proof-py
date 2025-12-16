@@ -8,8 +8,8 @@ from datetime import datetime, timezone
 from psl_proof.models.proof_response import ProofResponse
 from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_base64, deserialize_bloom_filter_base64
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
-from psl_proof.utils.validate_data import validate_data, get_total_score
-from psl_proof.utils.submission import submit_data
+from psl_proof.utils.validate_data import get_total_score
+from psl_proof.utils.submission import submit_data, evaluate_submission
 from psl_proof.utils.verification import verify_token, VerifyTokenResult
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory
 from psl_proof.utils.submission import get_submission_historical_data
@@ -29,12 +29,13 @@ class Proof:
         current_timestamp = datetime.now(timezone.utc)
 
         source_data = None
+        raw_input_data = None  # Keep raw data for evaluate endpoint
         for input_filename in os.listdir(self.config['input_dir']):
             input_file = os.path.join(self.config['input_dir'], input_filename)
             with open(input_file, 'r') as f:
-                input_data = json.load(f)
+                raw_input_data = json.load(f)
                 source_data = get_source_data(
-                    input_data,
+                    raw_input_data,
                     current_timestamp
                 )
                 break
@@ -102,54 +103,61 @@ class Proof:
             logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
             return self.proof_response
 
-        #validate/proof data ...
-        validate_data(
+        # Call backend evaluate endpoint for quality and uniqueness scores
+        # This replaces the local validate_data call
+        evaluate_result = evaluate_submission(
             self.config,
-            cargo_data,
-            self.proof_response
+            source_data,
+            raw_input_data
         )
+        
+        if not evaluate_result.is_valid:
+            print(f"Evaluation failed: {evaluate_result.error_text}")
+            self.proof_response.set_proof_is_invalid()
+            self.proof_response.attributes = {
+                'proof_valid': False,
+                'proof_failed_reason': evaluate_result.error_text,
+                'did_score_content': False,
+                'source': source_data.source.name,
+                'revision': data_revision,
+                'submitted_on': current_timestamp.isoformat()
+            }
+            self.proof_response.metadata = metadata
+            logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
+            return self.proof_response
 
-        maximum_score = 1
-        reward_factor = 100 # Maximium VFSN, Max. reward per chat --> 1 VFSN.
-        self.proof_response.quality = cargo_data.total_quality / reward_factor
-        if (self.proof_response.quality > maximum_score):
-            self.proof_response.quality = maximum_score
-
-        self.proof_response.uniqueness = cargo_data.total_uniqueness / reward_factor
-        if (self.proof_response.uniqueness > maximum_score):
-            self.proof_response.uniqueness = maximum_score
-        #score data
+        # Use scores from backend evaluation
+        maximum_score = 1.0
+        self.proof_response.quality = min(evaluate_result.quality, maximum_score)
+        self.proof_response.uniqueness = min(evaluate_result.uniqueness, maximum_score)
+        
+        # Calculate total score using the same formula
         total_score = get_total_score(
             self.proof_response.quality,
             self.proof_response.uniqueness
         )
-        print(f"Scores >> Quality: {self.proof_response.quality} | Uniqueness: {self.proof_response.uniqueness} | Total: {total_score}")
+        print(f"Scores >> Quality: {self.proof_response.quality:.4f} | Uniqueness: {self.proof_response.uniqueness:.4f} | Total: {total_score:.4f}")
 
-        minimum_score = 0.05 / reward_factor
-        self.proof_response.valid = True # might other factor affect it
-        self.proof_response.score = total_score
-        if total_score < minimum_score:
-            self.proof_response.score = minimum_score
-        if total_score > maximum_score:
-            self.proof_response.score = maximum_score
+        minimum_score = 0.0005  # 0.05 / 100
+        self.proof_response.valid = True
+        self.proof_response.score = max(minimum_score, min(total_score, maximum_score))
 
-        print(f"Proof score: {self.proof_response.score }")
+        print(f"Proof score: {self.proof_response.score}")
         self.proof_response.attributes = {
             'score': self.proof_response.score,
             'did_score_content': True,
             'source': source_data.source.name,
             'revision': data_revision,
-            'submitted_on': current_timestamp.isoformat() #,
-            #'chat_data': cargo_data.get_chat_list_data()
+            'submitted_on': current_timestamp.isoformat()
         }
         self.proof_response.metadata = metadata
 
-        #Submit Source data to server
+        # Submit source data to server (submission metadata only, raw data already stored by evaluate)
         submit_data_result = submit_data(
             self.config,
             source_data
         )
-        if submit_data_result and not submit_data_result.is_valid :
+        if submit_data_result and not submit_data_result.is_valid:
             logging.info(f"submit data failed: {submit_data_result.error_text}")
             self.proof_response.set_proof_is_invalid()
             self.proof_response.attributes.pop('score', None)

@@ -9,7 +9,15 @@ from datetime import datetime
 
 from psl_proof.models.cargo_data import SourceData, DataSource
 from psl_proof.utils.validation_api import get_validation_api_url
-from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory, SubmitDataResponse
+from psl_proof.models.submission_dtos import (
+    ChatHistory, 
+    SubmissionChat, 
+    SubmissionHistory, 
+    SubmitDataResponse,
+    EvaluateSubmissionResponse,
+    EvaluationDetails,
+    ChatEvaluationSummary
+)
 
 def get_submission_historical_data(
         config: Dict[str, Any],
@@ -84,6 +92,111 @@ def get_submission_historical_data(
         traceback.print_exc()
         sys.exit(1)
 
+
+
+def evaluate_submission(
+    config: Dict[str, Any],
+    source_data: SourceData,
+    raw_input_data: Dict[str, Any]
+) -> EvaluateSubmissionResponse:
+    """
+    Send raw chat data to the backend for quality and uniqueness evaluation.
+    The backend will:
+    - Parse and normalize the raw data
+    - Calculate quality score using LLM
+    - Calculate uniqueness score using message hashes
+    - Store message hashes to database
+    - Store raw data to blob storage
+    
+    Args:
+        config: Configuration dictionary
+        source_data: SourceData with proof token and metadata
+        raw_input_data: The original raw input JSON data (chats array)
+    
+    Returns:
+        EvaluateSubmissionResponse with quality and uniqueness scores
+    """
+    try:
+        url = get_validation_api_url(
+            config,
+            "api/submissions/evaluate"
+        )
+        headers = {"Content-Type": "application/json"}
+        
+        # Build the evaluation request payload
+        # Send raw chat data for backend to parse and evaluate
+        raw_chats = raw_input_data.get('chats', [])
+        payload = {
+            "ProofToken": source_data.proof_token,
+            "DataSource": source_data.source.value,  # enum value
+            "SourceId": str(source_data.user),
+            "SubmittedBy": source_data.submission_by(),
+            "SubmittedOn": source_data.submission_date.isoformat(),
+            "Chats": [
+                {
+                    "ChatId": chat.get('chat_id'),
+                    "Contents": chat.get('contents', [])
+                }
+                for chat in raw_chats
+            ]
+        }
+        
+        logging.info(f"Calling evaluate endpoint for {len(raw_chats)} chats")
+        response = requests.post(url, json=payload, headers=headers)
+        
+        if response.status_code == 200:
+            result_json = response.json()
+            logging.info(f"Evaluate response: quality={result_json.get('quality', 0)}, uniqueness={result_json.get('uniqueness', 0)}")
+            
+            # Parse details if present
+            details = None
+            details_json = result_json.get("details")
+            if details_json:
+                chat_summaries = []
+                for summary_json in details_json.get("chatSummaries", []):
+                    chat_summaries.append(ChatEvaluationSummary(
+                        source_chat_id=summary_json.get("sourceChatId", ""),
+                        message_count=summary_json.get("messageCount", 0),
+                        substantive_word_count=summary_json.get("substantiveWordCount", 0),
+                        chat_quality=summary_json.get("chatQuality", 0.0),
+                        chat_uniqueness=summary_json.get("chatUniqueness", 0.0),
+                        passed_pre_filter=summary_json.get("passedPreFilter", False),
+                        pre_filter_reason=summary_json.get("preFilterReason")
+                    ))
+                
+                details = EvaluationDetails(
+                    total_messages=details_json.get("totalMessages", 0),
+                    unique_messages=details_json.get("uniqueMessages", 0),
+                    substantive_word_count=details_json.get("substantiveWordCount", 0),
+                    llm_reasoning=details_json.get("llmReasoning"),
+                    chat_summaries=chat_summaries
+                )
+            
+            return EvaluateSubmissionResponse(
+                is_valid=result_json.get("isValid", False),
+                error_text=result_json.get("errorText", ""),
+                quality=result_json.get("quality", 0.0),
+                uniqueness=result_json.get("uniqueness", 0.0),
+                details=details
+            )
+        else:
+            logging.error(f"Evaluate submission failed. Status code: {response.status_code}, Response: {response.text}")
+            return EvaluateSubmissionResponse(
+                is_valid=False,
+                error_text=f"Evaluate request failed with status {response.status_code}",
+                quality=0.0,
+                uniqueness=0.0
+            )
+            
+    except requests.exceptions.RequestException as e:
+        logging.error(f"evaluate_submission error: {e}")
+        traceback.print_exc()
+        return EvaluateSubmissionResponse(
+            is_valid=False,
+            error_text=str(e),
+            quality=0.0,
+            uniqueness=0.0
+        )
 
 
 def submit_data(
