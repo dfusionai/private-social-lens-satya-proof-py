@@ -21,9 +21,24 @@ from psl_proof.models.submission_dtos import (
 
 
 def parse_iso_datetime(date_string: str) -> datetime:
-    """Parse ISO datetime string, handling 'Z' suffix for UTC."""
+    """Parse ISO datetime string, handling 'Z' suffix and variable fractional seconds."""
+    import re
+    
     if date_string.endswith('Z'):
         date_string = date_string[:-1] + '+00:00'
+    
+    # Python's fromisoformat() requires 0, 3, or 6 digits for fractional seconds.
+    # Normalize to 6 digits (microseconds) if present.
+    # Match pattern: datetime.fraction+timezone or datetime.fraction-timezone
+    match = re.match(r'^(.+\.\d+)([+-].+)$', date_string)
+    if match:
+        dt_part, tz_part = match.groups()
+        # Split on '.' to get the fractional part
+        base, frac = dt_part.rsplit('.', 1)
+        # Pad or truncate to 6 digits
+        frac = frac[:6].ljust(6, '0')
+        date_string = f"{base}.{frac}{tz_part}"
+    
     return datetime.fromisoformat(date_string)
 
 def get_submission_historical_data(
@@ -133,12 +148,14 @@ def evaluate_submission(
         # Build the evaluation request payload
         # Send raw chat data for backend to parse and evaluate
         raw_chats = raw_input_data.get('chats', [])
+        submission_token = raw_input_data.get('submission_token', '')
         payload = {
             "ProofToken": source_data.proof_token,
             "DataSource": source_data.source.value,  # enum value
             "SourceId": str(source_data.user),
             "SubmittedBy": source_data.submission_by(),
             "SubmittedOn": source_data.submission_date.isoformat(),
+            "SubmissionToken": submission_token,
             "Chats": [
                 {
                     "ChatId": chat.get('chat_id'),
