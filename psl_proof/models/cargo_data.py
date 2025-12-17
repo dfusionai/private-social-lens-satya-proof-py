@@ -135,8 +135,10 @@ class SourceData:
         return json
 
     def submission_by(self):
+        # Bot always stores reference as 'telegram:{userId}' regardless of source
+        # So normalize telegramMiner -> telegram for token verification
         source = self.source
-        if (source == DataSource.telegramMiner):
+        if source == DataSource.telegramMiner:
            source = DataSource.telegram
         return f"{source.name}:{self.user}"
 
