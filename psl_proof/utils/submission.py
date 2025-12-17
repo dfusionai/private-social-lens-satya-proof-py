@@ -5,7 +5,7 @@ import logging
 import traceback
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 
 from psl_proof.models.cargo_data import SourceData, DataSource
 from psl_proof.utils.validation_api import get_validation_api_url
@@ -18,6 +18,13 @@ from psl_proof.models.submission_dtos import (
     EvaluationDetails,
     ChatEvaluationSummary
 )
+
+
+def parse_iso_datetime(date_string: str) -> datetime:
+    """Parse ISO datetime string, handling 'Z' suffix for UTC."""
+    if date_string.endswith('Z'):
+        date_string = date_string[:-1] + '+00:00'
+    return datetime.fromisoformat(date_string)
 
 def get_submission_historical_data(
         config: Dict[str, Any],
@@ -48,8 +55,8 @@ def get_submission_historical_data(
                             participant_count=chat.get("participantCount", 0),
                             chat_count=chat.get("chatCount", 0),
                             chat_length=chat.get("chatLength", 0),
-                            chat_start_on=datetime.fromisoformat(chat["chatStartOn"]),
-                            chat_ended_on=datetime.fromisoformat(chat["chatEndedOn"])
+                            chat_start_on=parse_iso_datetime(chat["chatStartOn"]),
+                            chat_ended_on=parse_iso_datetime(chat["chatEndedOn"])
                         )
                         for chat in chat_history_data.get("chats", [])
                     ]
@@ -65,7 +72,7 @@ def get_submission_historical_data(
                 #print(f"last_submission_val: {last_submission_val}")
                 try:
                     last_submission = (
-                        datetime.fromisoformat(last_submission_val)
+                        parse_iso_datetime(last_submission_val)
                         if last_submission_val
                         else None
                     )
