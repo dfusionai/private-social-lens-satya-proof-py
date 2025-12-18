@@ -126,17 +126,14 @@ class Proof:
             logging.info(f"ProofResponseAttributes: {json.dumps(self.proof_response.attributes, indent=2)}")
             return self.proof_response
 
-        # Use scores from backend evaluation
+        # Use scores from backend evaluation (multiplicative formula: Quality × Uniqueness)
         maximum_score = 1.0
         self.proof_response.quality = min(evaluate_result.quality, maximum_score)
         self.proof_response.uniqueness = min(evaluate_result.uniqueness, maximum_score)
         
-        # Calculate total score using the same formula
-        total_score = get_total_score(
-            self.proof_response.quality,
-            self.proof_response.uniqueness
-        )
-        print(f"Scores >> Quality: {self.proof_response.quality:.4f} | Uniqueness: {self.proof_response.uniqueness:.4f} | Total: {total_score:.4f}")
+        # Use backend's pre-calculated score directly (Quality × Uniqueness)
+        total_score = min(evaluate_result.score, maximum_score)
+        print(f"Scores >> Quality: {self.proof_response.quality:.4f} | Uniqueness: {self.proof_response.uniqueness:.4f} | Total: {total_score:.4f} (Q×U)")
 
         minimum_score = 0.0005  # 0.05 / 100
         self.proof_response.valid = True

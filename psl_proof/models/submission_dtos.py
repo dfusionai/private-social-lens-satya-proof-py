@@ -38,18 +38,14 @@ class ChatEvaluationSummary:
     """Summary of evaluation for a single chat"""
     source_chat_id: str
     message_count: int
-    substantive_word_count: int
     chat_quality: float
     chat_uniqueness: float
-    passed_pre_filter: bool
-    pre_filter_reason: Optional[str] = None
 
 @dataclass
 class EvaluationDetails:
     """Details of the evaluation"""
     total_messages: int
     unique_messages: int
-    substantive_word_count: int
     llm_reasoning: Optional[str] = None
     chat_summaries: List[ChatEvaluationSummary] = field(default_factory=list)
 
@@ -60,4 +56,5 @@ class EvaluateSubmissionResponse:
     error_text: str
     quality: float = 0.0
     uniqueness: float = 0.0
+    score: float = 0.0  # Final score: Quality × Uniqueness (multiplicative)
     details: Optional[EvaluationDetails] = None

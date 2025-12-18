@@ -181,17 +181,13 @@ def evaluate_submission(
                     chat_summaries.append(ChatEvaluationSummary(
                         source_chat_id=summary_json.get("sourceChatId", ""),
                         message_count=summary_json.get("messageCount", 0),
-                        substantive_word_count=summary_json.get("substantiveWordCount", 0),
                         chat_quality=summary_json.get("chatQuality", 0.0),
-                        chat_uniqueness=summary_json.get("chatUniqueness", 0.0),
-                        passed_pre_filter=summary_json.get("passedPreFilter", False),
-                        pre_filter_reason=summary_json.get("preFilterReason")
+                        chat_uniqueness=summary_json.get("chatUniqueness", 0.0)
                     ))
                 
                 details = EvaluationDetails(
                     total_messages=details_json.get("totalMessages", 0),
                     unique_messages=details_json.get("uniqueMessages", 0),
-                    substantive_word_count=details_json.get("substantiveWordCount", 0),
                     llm_reasoning=details_json.get("llmReasoning"),
                     chat_summaries=chat_summaries
                 )
@@ -201,6 +197,7 @@ def evaluate_submission(
                 error_text=result_json.get("errorText", ""),
                 quality=result_json.get("quality", 0.0),
                 uniqueness=result_json.get("uniqueness", 0.0),
+                score=result_json.get("score", 0.0),  # Backend's multiplicative score
                 details=details
             )
         else:
@@ -209,7 +206,8 @@ def evaluate_submission(
                 is_valid=False,
                 error_text=f"Evaluate request failed with status {response.status_code}",
                 quality=0.0,
-                uniqueness=0.0
+                uniqueness=0.0,
+                score=0.0
             )
             
     except requests.exceptions.RequestException as e:
@@ -219,7 +217,8 @@ def evaluate_submission(
             is_valid=False,
             error_text=str(e),
             quality=0.0,
-            uniqueness=0.0
+            uniqueness=0.0,
+            score=0.0
         )
 
 
