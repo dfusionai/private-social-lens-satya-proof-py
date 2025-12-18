@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from psl_proof.models.proof_response import ProofResponse
 from psl_proof.utils.hashing_utils import salted_data, serialize_bloom_filter_base64, deserialize_bloom_filter_base64
 from psl_proof.models.cargo_data import SourceChatData, CargoData, SourceData, DataSource, MetaData, DataSource
-from psl_proof.utils.validate_data import get_total_score
 from psl_proof.utils.submission import submit_data, evaluate_submission
 from psl_proof.utils.verification import verify_token, VerifyTokenResult
 from psl_proof.models.submission_dtos import ChatHistory, SubmissionChat, SubmissionHistory
@@ -51,11 +50,13 @@ class Proof:
             source_data
         )
         is_data_authentic = verify_result
+        cooldown_period_hours = 4
         if is_data_authentic:
             #print(f"verify_result: {verify_result}")
             is_data_authentic = verify_result.is_valid
             proof_failed_reason = verify_result.error_text
             source_data.proof_token = verify_result.proof_token
+            cooldown_period_hours = verify_result.cooldown_period_hours
 
         cargo_data = CargoData(
             source_data = source_data,
@@ -74,11 +75,11 @@ class Proof:
             cargo_data.chat_histories = submission_history_data.chat_histories
             cargo_data.last_submission = submission_history_data.last_submission
 
-        cool_down_period = 4 # hours
+        # Use cooldown period from backend config
         submission_time_elapsed = cargo_data.submission_time_elapsed()
-        if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cool_down_period:
+        if is_data_authentic and cargo_data.last_submission and submission_time_elapsed < cooldown_period_hours:
             is_data_authentic = False
-            proof_failed_reason = f"Last submission was made within the past {cool_down_period} hours"
+            proof_failed_reason = f"Last submission was made within the past {cooldown_period_hours} hours"
 
         metadata = MetaData(
           source_id = source_user_hash_64,
