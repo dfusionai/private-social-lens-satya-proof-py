@@ -161,7 +161,10 @@ def evaluate_submission(
                     "ChatId": chat.get('chat_id'),
                     "Contents": chat.get('contents', [])
                 }
+                # Filter out chats missing chat_id or with empty contents
+                # (consistent with get_source_data validation in proof.py)
                 for chat in raw_chats
+                if chat.get('chat_id') and chat.get('contents')
             ]
         }
         

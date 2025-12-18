@@ -50,13 +50,15 @@ class Proof:
             source_data
         )
         is_data_authentic = verify_result
-        cooldown_period_hours = 4
+        cooldown_period_hours = 4  # Safe default
         if is_data_authentic:
             #print(f"verify_result: {verify_result}")
             is_data_authentic = verify_result.is_valid
             proof_failed_reason = verify_result.error_text
             source_data.proof_token = verify_result.proof_token
-            cooldown_period_hours = verify_result.cooldown_period_hours
+            # Only use backend cooldown if provided (> 0), otherwise keep safe default
+            if verify_result.cooldown_period_hours > 0:
+                cooldown_period_hours = verify_result.cooldown_period_hours
 
         cargo_data = CargoData(
             source_data = source_data,
