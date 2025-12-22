@@ -51,6 +51,7 @@ class Proof:
         )
         is_data_authentic = verify_result
         cooldown_period_hours = 4  # Safe default
+        minimum_score = 0.0001  # Safe default. 0.01 / 100
         if is_data_authentic:
             #print(f"verify_result: {verify_result}")
             is_data_authentic = verify_result.is_valid
@@ -59,6 +60,9 @@ class Proof:
             # Only use backend cooldown if provided (> 0), otherwise keep safe default
             if verify_result.cooldown_period_hours > 0:
                 cooldown_period_hours = verify_result.cooldown_period_hours
+            # Only use backend minimum score if provided (> 0), otherwise keep safe default
+            if verify_result.minimum_score > 0:
+                minimum_score = verify_result.minimum_score
 
         cargo_data = CargoData(
             source_data = source_data,
@@ -138,7 +142,7 @@ class Proof:
         total_score = min(evaluate_result.score, maximum_score)
         print(f"Scores >> Quality: {self.proof_response.quality:.4f} | Uniqueness: {self.proof_response.uniqueness:.4f} | Total: {total_score:.4f} (Q×U)")
 
-        minimum_score = 0.0005  # 0.05 / 100
+        # minimum_score is set earlier from backend config (default: 0.0001)
         self.proof_response.valid = True
         self.proof_response.score = max(minimum_score, min(total_score, maximum_score))
 
