@@ -25,7 +25,8 @@ def verify_token(config: Dict[str, Any], source_data: SourceData) -> Optional[Ve
                     is_valid=result_json.get("isValid", False),
                     error_text=result_json.get("errorText", ""),
                     proof_token=result_json.get("proofToken", ""),
-                    cooldown_period_hours=result_json.get("cooldownPeriodHours", 0)
+                    cooldown_period_hours=result_json.get("cooldownPeriodHours", 0),
+                    minimum_score=result_json.get("minimumScore", 0)
                 )
                 return result
             except ValueError as e:

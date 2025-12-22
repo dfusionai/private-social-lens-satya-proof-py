@@ -8,3 +8,4 @@ class VerifyTokenResult:
     error_text: str
     proof_token: str
     cooldown_period_hours: float = 0  # Cooldown period from backend config
+    minimum_score: float = 0  # Minimum score threshold from backend config
